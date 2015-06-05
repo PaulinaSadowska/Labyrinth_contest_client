@@ -14,11 +14,11 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    GlobalMapManager.cpp \
-    RobotManager.cpp
+    RobotManager.cpp \
+    MapManager.cpp
 
 HEADERS  += mainwindow.h \
-    GlobalMapManager.h \
-    RobotManager.h
+    RobotManager.h \
+    MapManager.h
 
 FORMS    += mainwindow.ui

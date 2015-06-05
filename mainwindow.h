@@ -5,7 +5,7 @@
 #include <QtNetwork>
 #include <QTextStream>
 #include "RobotManager.h"
-#include "GlobalMapManager.h"
+#include "MapManager.h"
 
 namespace Ui {
 class MainWindow;
@@ -56,7 +56,7 @@ private:
     QTcpSocket* socket;
     QTextStream socketStream;
     RobotManager robotManager;
-    GlobalMapManager mapManager;
+    MapManager mapManager;
 
     //enum {Right, Forward, Left, Whatever} nextMove;
 

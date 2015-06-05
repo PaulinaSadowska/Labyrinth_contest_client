@@ -19,16 +19,12 @@ void RobotManager::Init()
 
 void RobotManager::MoveForward(int step)
 {
-    if(position.posX==47 && position.posY == 52)
-    {
-        return;
-    }
     if( step < 1 || step > 3 )
         return;
     switch(position.orientation)
     {
         case Up : {
-            position.posY+=step;
+            position.posY-=step;
             break;
         }
         case Right : {
@@ -36,7 +32,7 @@ void RobotManager::MoveForward(int step)
             break;
         }
         case Down : {
-            position.posY-=step;
+            position.posY+=step;
             break;
         }
 

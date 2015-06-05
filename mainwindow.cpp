@@ -8,6 +8,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     socket=new QTcpSocket(this);
 
+    //local map table
     for(int i=0;i<7;i++)
         for(int j=0;j<4;j++)
             ui->robotVisionTable->setItem(j,i,new QTableWidgetItem("?"));
@@ -16,7 +17,23 @@ MainWindow::MainWindow(QWidget *parent) :
     for(int i=0;i<4;i++)
         ui->robotVisionTable->setRowHeight(i,30);
 
-    //nextMove = Whatever;
+    //nearest map table
+    for(int i=0;i<7;i++)
+        for(int j=0;j<4;j++)
+            ui->nearestMapTable->setItem(j,i,new QTableWidgetItem("?"));
+    for(int i=0;i<7;i++)
+        ui->nearestMapTable->setColumnWidth(i,30);
+    for(int i=0;i<4;i++)
+        ui->nearestMapTable->setRowHeight(i,30);
+
+    //global map table
+    for(int i=0;i<99;i++)
+        for(int j=0;j<99;j++)
+            ui->globalMapTable->setItem(j,i,new QTableWidgetItem(" "));
+    for(int i=0;i<99;i++)
+        ui->globalMapTable->setColumnWidth(i,20);
+    for(int i=0;i<99;i++)
+        ui->globalMapTable->setRowHeight(i,20);
 }
 
 MainWindow::~MainWindow()
@@ -87,42 +104,35 @@ void MainWindow::new_message()
             for(int j=0;j<7;j++)
                 ui->robotVisionTable->item(3-i,j)->setText(localMap.mid(4+i*7+j,1));
 
+
         //update robot manager
         robotManager.MoveForward(localMap[2].digitValue());
         if(localMap[0]=='R')
             robotManager.RotateRight();
         else if(localMap[0]=='L')
             robotManager.RotateLeft();
-        else if(localMap[0]=='X')
+        else if(localMap[0]=='X') //new map
         {
             robotManager.Init();
+            mapManager.mapInit();
         }
-        //update global map
+
+        //update maps (global and nearest)
         mapManager.UpdateMap(robotManager, localMap);
 
-        /// the easiest algorithm:
-        /// go ahead and when yu can't - turn right
-        ///
+        //show gobal map on ui
+        for(int i=0;i<98;i++)
+            for(int j=0;j<98;j++)
+                ui->globalMapTable->item(i,j)->setText(mapManager.getGlobalMapElement(j, i));
 
-        /*if(nextMove==Whatever || nextMove==Forward)
-        {
-            if(localMap[14]=='.' || localMap[14]=='E')
-                MoveForward();
-            if(localMap[15]=='.')
-                nextMove=Right;
-            else if(localMap[14]!='.' && localMap[14]!='E')
-            {
-                RotateLeft();
-                nextMove=Forward;
-            }
+        //show nearest map on ui
+        for(int i=0;i<4;i++)
+            for(int j=0;j<7;j++)
+                ui->nearestMapTable->item(3-i,j)->setText(mapManager.getNearestMapElement(i*7+j));
 
 
-        }
-        else if(nextMove==Right)
-        {
-            RotateRight();
-            nextMove=Forward;
-        }*/
+
+
     }
 
 }
