@@ -132,12 +132,81 @@ void MainWindow::new_message()
                 ui->nearestMapTable->item(3-i, j)->setText(mapManager.getNearestMapElementStr(j+7*i));
             }
 
-        //Move();
+        Move();
     }
 
 }
 
 bool MainWindow::Move()
+{
+
+    if(LookForFinishLine())
+        return true;
+
+    if((mapManager.LeftPoints[0]==mapManager.RightPoints[0] && (mapManager.RightPoints[1]==0 || mapManager.LeftPoints[1]==0) && mapManager.ForwardPoints[0]<0) ||
+            (mapManager.LeftPoints[0]==mapManager.ForwardPoints[0] && mapManager.LeftPoints[1]==0) ||
+            (mapManager.RightPoints[0]==mapManager.ForwardPoints[0] && mapManager.RightPoints[1]==0))
+    {
+        Wait();
+        return true;
+    }
+
+    if(mapManager.LeftPoints[0]<0 && mapManager.ForwardPoints[0]<0 && mapManager.RightPoints[0]<0)
+    {
+        RotateRight();
+        return true;
+    }
+
+    int max = 0;
+    char dir;
+
+    if(mapManager.RightPoints[0]>max && mapManager.RightPoints[0]<74)
+    {
+        max = mapManager.RightPoints[0];
+        dir = 'R';
+    }
+    if(mapManager.ForwardPoints[0]>max)
+    {
+        max = mapManager.ForwardPoints[0];
+        dir = 'F';
+    }
+    if(mapManager.LeftPoints[0]>(max+6) && mapManager.RightPoints[0]<74)
+    {
+        max = mapManager.LeftPoints[0];
+        dir = 'L';
+    }
+
+    switch(dir)
+    {
+    case 'L' :
+    {
+        RotateLeft();
+        return true;
+    }
+    case 'R' :
+    {
+        RotateRight();
+        return true;
+    }
+    case 'F' :
+    {
+        if(mapManager.ForwardPoints[0] > mapManager.ForwardPoints[1] &&
+                mapManager.ForwardPoints[0] > (mapManager.ForwardPoints[2]-2))
+            MoveForward();
+        else
+            MoveFastForward();
+        return true;
+    }
+    default :
+        return false;
+    }
+
+    return false;
+
+
+}
+
+/*bool MainWindow::Move()
 {
     doneFlag = false;
 
@@ -364,7 +433,7 @@ bool MainWindow::Step04(){
     }
 
 }
-
+*/
 bool MainWindow::LookForFinishLine()
 {
     //if finish line in front of robot

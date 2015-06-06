@@ -54,7 +54,7 @@ private slots:
 
     void client_disconnected();
 
-    bool Step00();
+   /* bool Step00();
     bool Step10();
     bool Step20();
     bool Step01();
@@ -62,7 +62,7 @@ private slots:
     bool Step12();
     bool Step03();
     bool Step04();
-    bool Step13();
+    bool Step13();*/
 
 
 private:

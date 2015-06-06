@@ -15,6 +15,7 @@ public:
     void UpdateMap(RobotManager &manager, QString &localMap);
     void UpdateGlobalMap(RobotManager &manager, QString &localMap);
     void UpdateNearestMap(RobotManager &manager);
+    void UpdateDirectionWeights();
 
     std::vector<int> getGlobalMapPos(int robotPosX, int robotPosY, int i, ORIENTATION robotOrientation); //z lokalnej na globalne
     std::vector<int> getSteppedPos(QChar stepSize, int robotPosX, int robotPosY, ORIENTATION robotOrientation);
@@ -29,10 +30,16 @@ public:
 
     void mapInit();
 
+   int RightPoints[3];
+   int ForwardPoints[3];
+   int LeftPoints[3];
 
 private:
    std::vector<int> globalMap[99];
    int nearestMap[28];
+
+
+
 };
 
 #endif // GLOBALMAP_H

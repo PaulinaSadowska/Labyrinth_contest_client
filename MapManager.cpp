@@ -28,6 +28,7 @@ void MapManager::UpdateMap(RobotManager &manager, QString &localMap)
 {
      UpdateGlobalMap(manager, localMap);
      UpdateNearestMap(manager);
+     UpdateDirectionWeights();
 }
 
 void MapManager::UpdateGlobalMap(RobotManager &manager, QString &localMap)
@@ -70,6 +71,45 @@ void MapManager::UpdateGlobalMap(RobotManager &manager, QString &localMap)
             }
         }
     }
+}
+
+void MapManager::UpdateDirectionWeights()
+{
+    ForwardPoints[0] = nearestMap[10] + (nearestMap[9]+nearestMap[11])/2;
+    ForwardPoints[1] = nearestMap[17] + (nearestMap[16]+nearestMap[18])/2;
+    ForwardPoints[2] = nearestMap[24] + (nearestMap[23]+nearestMap[25])/2;
+
+    LeftPoints[0] = nearestMap[2] + nearestMap[9];
+    LeftPoints[1] = nearestMap[1] + nearestMap[8];
+    LeftPoints[2] = nearestMap[0] + nearestMap[7];
+
+    RightPoints[0] = nearestMap[4] + nearestMap[11];
+    RightPoints[1] = nearestMap[5] + nearestMap[12];
+    RightPoints[2] = nearestMap[6] + nearestMap[13];
+
+    //find where is the wall
+
+    //wall ahead
+    if(ForwardPoints[0]<0)
+    {
+        ForwardPoints[1]=-1;
+        ForwardPoints[2]=-1;
+    }
+
+    //wall on the right
+    if(RightPoints[0]<0)
+    {
+        RightPoints[1]=-1;
+        RightPoints[2]=-1;
+    }
+
+    //wall on the left
+    if(LeftPoints[0]<0)
+    {
+        LeftPoints[1]=-1;
+        LeftPoints[2]=-1;
+    }
+
 }
 
 void MapManager::FindDeadEnds(RobotManager &manager)
