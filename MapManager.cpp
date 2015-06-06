@@ -42,7 +42,12 @@ void MapManager::UpdateGlobalMap(RobotManager &manager, QString &localMap)
             if(globalMap[mapPos[0]][mapPos[1]]!=localMap[i+4] && globalMap[mapPos[0]][mapPos[1]]==' ')
             {
                 if(localMap[i+4]!='.')
-                    globalMap[mapPos[0]][mapPos[1]] = localMap[i+4];
+                {
+                    if(localMap[i+4]=='O')
+                        globalMap[mapPos[0]][mapPos[1]] = '#';
+                    else
+                        globalMap[mapPos[0]][mapPos[1]] = localMap[i+4];
+                }
                 else
                     globalMap[mapPos[0]][mapPos[1]] = '0';
             }
