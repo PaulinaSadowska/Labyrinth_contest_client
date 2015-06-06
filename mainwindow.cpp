@@ -123,14 +123,16 @@ void MainWindow::new_message()
         //show gobal map on ui
         for(int i=0;i<98;i++)
             for(int j=0;j<98;j++)
-                ui->globalMapTable->item(i,j)->setText(mapManager.getGlobalMapElement(j, i));
+                ui->globalMapTable->item(i,j)->setText(mapManager.getGlobalMapElementStr(j, i));
 
         //show nearest map on ui
         for(int i=0;i<4;i++)
             for(int j=0;j<7;j++)
-                ui->nearestMapTable->item(3-i,j)->setText(mapManager.getNearestMapElement(i*7+j));
+            {
+                ui->nearestMapTable->item(3-i, j)->setText(mapManager.getNearestMapElementStr(j+7*i));
+            }
 
-        Move();
+        //Move();
     }
 
 }

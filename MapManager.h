@@ -19,8 +19,12 @@ public:
     std::vector<int> getGlobalMapPos(int robotPosX, int robotPosY, int i, ORIENTATION robotOrientation); //z lokalnej na globalne
     std::vector<int> getSteppedPos(QChar stepSize, int robotPosX, int robotPosY, ORIENTATION robotOrientation);
 
-    QChar getGlobalMapElement(int x, int y);
-    QChar getNearestMapElement(int i);
+    int getGlobalMapElement(int x, int y);
+    int getNearestMapElement(int i);
+
+    QString getGlobalMapElementStr(int x, int y);
+    QString getNearestMapElementStr(int i);
+
     void FindDeadEnds(RobotManager &manager);
 
     void mapInit();

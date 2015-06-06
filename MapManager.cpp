@@ -170,13 +170,58 @@ std::vector<int> MapManager::getGlobalMapPos(int robotPosX, int robotPosY, int i
 }
 
 
-QChar MapManager::getGlobalMapElement(int x, int y)
+int MapManager::getGlobalMapElement(int x, int y)
 {
     return globalMap[x][y];
 }
 
-QChar MapManager::getNearestMapElement(int i){
+int MapManager::getNearestMapElement(int i){
     return nearestMap[i];
+}
+
+QString MapManager::getGlobalMapElementStr(int x, int y)
+{
+    int element = globalMap[x][y];
+    if(element>0)
+    {
+        if(element == 50)
+            return "3";
+        if(element == 20)
+            return "2";
+        if(element == 8)
+            return "1";
+    }
+    if(element<0)
+        return "#";
+    if(element==0)
+        return " ";
+    if(element == 500)
+        return "E";
+
+    return 0;
+}
+
+QString MapManager::getNearestMapElementStr(int i)
+{
+    int element = nearestMap[i];
+    if(element>0)
+    {
+        if(element == 50)
+            return "3";
+        if(element == 20)
+            return "2";
+        if(element == 8)
+            return "1";
+    }
+    if(element<0)
+        return "#";
+    if(element==0)
+        return " ";
+    if(element == 500)
+        return "E";
+
+    return 0;
+
 }
 
 std::vector<int> MapManager::getSteppedPos(QChar stepSize, int robotPosX, int robotPosY, ORIENTATION robotOrientation)
