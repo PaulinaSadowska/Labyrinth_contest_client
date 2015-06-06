@@ -178,7 +178,7 @@ bool MainWindow::Move()
 }
 
 bool MainWindow::Step00(){
-    if(mapManager.getNearestMapElement(4)=='#' && mapManager.getNearestMapElement(2)!='?')
+    if(mapManager.getNearestMapElement(4)<0 && mapManager.getNearestMapElement(2)!=0)
         return 1;
     else
         return 0;
@@ -186,7 +186,7 @@ bool MainWindow::Step00(){
 
 bool MainWindow::Step10()
 {
-    if(mapManager.getNearestMapElement(10)=='#')
+    if(mapManager.getNearestMapElement(10)<0)
     {
         RotateLeft();
         doneFlag = 1;
@@ -201,7 +201,7 @@ bool MainWindow::Step10()
 
 bool MainWindow::Step20()
 {
-    if(mapManager.getNearestMapElement(11)=='#' && mapManager.getNearestMapElement(17)!='#')
+    if(mapManager.getNearestMapElement(11)<0 && mapManager.getNearestMapElement(17)>-1)
     {
         doneFlag = 1;
         MoveFastForward();
@@ -216,7 +216,7 @@ bool MainWindow::Step20()
 }
 
 bool MainWindow::Step01(){
-    if(mapManager.getNearestMapElement(2)=='?' || mapManager.getNearestMapElement(4)=='?')
+    if(mapManager.getNearestMapElement(2)>0 || mapManager.getNearestMapElement(4)>0)
     {
         doneFlag = 1;
         Wait();
@@ -224,10 +224,10 @@ bool MainWindow::Step01(){
     }
     else
     {
-        if(mapManager.getNearestMapElement(2)=='#')
+        if(mapManager.getNearestMapElement(2)<0)
         {
             if(mapManager.getNearestMapElement(4)<=mapManager.getNearestMapElement(10) ||
-               mapManager.getNearestMapElement(10) == '#')
+               mapManager.getNearestMapElement(10) <0)
             {
                 doneFlag = 1;
                 RotateRight();
@@ -242,7 +242,7 @@ bool MainWindow::Step01(){
         {
             if((mapManager.getNearestMapElement(2)<mapManager.getNearestMapElement(10) ||
                 mapManager.getNearestMapElement(4)<mapManager.getNearestMapElement(10) ) ||
-                mapManager.getNearestMapElement(10) == '#')
+                mapManager.getNearestMapElement(10) <0)
             {
                 return 1;
             }
@@ -281,8 +281,8 @@ bool MainWindow::Step12(){
 
 bool MainWindow::Step03(){
 
-    if(mapManager.getNearestMapElement(1) == '?' ||
-       mapManager.getNearestMapElement(5) == '?')
+    if(mapManager.getNearestMapElement(1) >0 ||
+       mapManager.getNearestMapElement(5) >0)
     {
         doneFlag = 1;
         Wait();
@@ -290,8 +290,8 @@ bool MainWindow::Step03(){
     }
     else
     {
-        if(mapManager.getNearestMapElement(1) == '#' ||
-           mapManager.getNearestMapElement(5) == '#')
+        if(mapManager.getNearestMapElement(1) <0 ||
+           mapManager.getNearestMapElement(5) <0 )
             return 1;
         else
             return 0;
@@ -300,8 +300,8 @@ bool MainWindow::Step03(){
 
 bool MainWindow::Step13(){
 
-    if(mapManager.getNearestMapElement(0) == '?' ||
-       mapManager.getNearestMapElement(6) == '?')
+    if(mapManager.getNearestMapElement(0) > 0 ||
+       mapManager.getNearestMapElement(6) > 0)
     {
         doneFlag = 1;
         Wait();
@@ -309,11 +309,11 @@ bool MainWindow::Step13(){
     }
     else
     {
-        if(mapManager.getNearestMapElement(6) == '#')
+        if(mapManager.getNearestMapElement(6) < 0)
         {
-            if(mapManager.getNearestMapElement(0) == '#')
+            if(mapManager.getNearestMapElement(0) < 0)
             {
-                if(mapManager.getNearestMapElement(10) == '#')
+                if(mapManager.getNearestMapElement(10) < 0)
                 {
                     doneFlag = 1;
                     RotateRight();
@@ -343,17 +343,17 @@ bool MainWindow::Step13(){
 
 bool MainWindow::Step04(){
 
-    if(mapManager.getNearestMapElement(1) == '#' && mapManager.getNearestMapElement(5) == '#')
+    if(mapManager.getNearestMapElement(1) < 0  && mapManager.getNearestMapElement(5) < 0)
         return 1;
     else
     {
-        if(mapManager.getNearestMapElement(1) == '#')
+        if(mapManager.getNearestMapElement(1) < 0)
         {
             doneFlag = 1;
             RotateRight();
             return 0;
         }
-        else if(mapManager.getNearestMapElement(5) == '#')
+        else if(mapManager.getNearestMapElement(5) < 0)
         {
             doneFlag = 1;
             RotateLeft();
@@ -366,45 +366,45 @@ bool MainWindow::Step04(){
 bool MainWindow::LookForFinishLine()
 {
     //if finish line in front of robot
-    if(mapManager.getNearestMapElement(10)=='E' ||
-            mapManager.getNearestMapElement(17)=='E' ||
-            mapManager.getNearestMapElement(23)=='E' ||
-            mapManager.getNearestMapElement(24)=='E' ||
-            mapManager.getNearestMapElement(25)=='E')
+    if(mapManager.getNearestMapElement(10)>100 ||
+            mapManager.getNearestMapElement(17)>100 ||
+            mapManager.getNearestMapElement(23)>100 ||
+            mapManager.getNearestMapElement(24)>100 ||
+            mapManager.getNearestMapElement(25)>100)
     {
         Rush();
         return true;
     }
-    if(mapManager.getNearestMapElement(16)=='E' ||
-            mapManager.getNearestMapElement(18)=='E' ||
-            mapManager.getNearestMapElement(19)=='E' ||
-            mapManager.getNearestMapElement(15)=='E')
+    if(mapManager.getNearestMapElement(16)>100 ||
+            mapManager.getNearestMapElement(18)>100 ||
+            mapManager.getNearestMapElement(19)>100 ||
+            mapManager.getNearestMapElement(15)>100)
     {
         MoveFastForward();
         return true;
     }
-    if(mapManager.getNearestMapElement(9)=='E' ||
-            mapManager.getNearestMapElement(11)=='E')
+    if(mapManager.getNearestMapElement(9)>100 ||
+            mapManager.getNearestMapElement(11)>100)
     {
         MoveForward();
         return true;
     }
     //if finish line is in the right of robot
-    if(mapManager.getNearestMapElement(4)=='E' ||
-            mapManager.getNearestMapElement(5)=='E' ||
-            mapManager.getNearestMapElement(6)=='E' ||
-            mapManager.getNearestMapElement(12)=='E' ||
-            mapManager.getNearestMapElement(13)=='E')
+    if(mapManager.getNearestMapElement(4)>100 ||
+            mapManager.getNearestMapElement(5)>100 ||
+            mapManager.getNearestMapElement(6)>100 ||
+            mapManager.getNearestMapElement(12)>100 ||
+            mapManager.getNearestMapElement(13)>100)
     {
         RotateRight();
         return true;
     }
     //if finish line is in the left of robot
-    if(mapManager.getNearestMapElement(0)=='E' ||
-            mapManager.getNearestMapElement(1)=='E' ||
-            mapManager.getNearestMapElement(2)=='E' ||
-            mapManager.getNearestMapElement(7)=='E' ||
-            mapManager.getNearestMapElement(8)=='E')
+    if(mapManager.getNearestMapElement(0)>100 ||
+            mapManager.getNearestMapElement(1)>100 ||
+            mapManager.getNearestMapElement(2)>100 ||
+            mapManager.getNearestMapElement(7)>100 ||
+            mapManager.getNearestMapElement(8)>100)
     {
         RotateLeft();
         return true;

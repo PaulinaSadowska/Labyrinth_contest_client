@@ -14,13 +14,13 @@ void MapManager::mapInit()
 {
     for(int i=0; i<99; i++)
     {
-        globalMap[i].assign(99,' ');
+        globalMap[i].assign(99, 0);
     }
-    globalMap[49][49]='S';
+    globalMap[49][49]=20;
 
     for(int i=0; i<28; i++)
     {
-        nearestMap[i] = ' ';
+        nearestMap[i] = 0;
     }
 }
 
@@ -39,36 +39,86 @@ void MapManager::UpdateGlobalMap(RobotManager &manager, QString &localMap)
         {
             mapPos = getGlobalMapPos(manager.getPosX(), manager.getPosY(), i, manager.getOrientation());
             //add element to global map if is not there
-            if(globalMap[mapPos[0]][mapPos[1]]!=localMap[i+4] && globalMap[mapPos[0]][mapPos[1]]==' ')
+            if(globalMap[mapPos[0]][mapPos[1]]==0)
             {
                 if(localMap[i+4]!='.')
                 {
-                    if(localMap[i+4]=='O')
-                        globalMap[mapPos[0]][mapPos[1]] = '#';
-                    else
-                        globalMap[mapPos[0]][mapPos[1]] = localMap[i+4];
+                    if(localMap[i+4]=='O' || localMap[i+4] == '#')
+                        globalMap[mapPos[0]][mapPos[1]] = -1;
+                    else if(localMap[i+4]=='E')
+                        globalMap[mapPos[0]][mapPos[1]] = 500;
                 }
                 else
-                    globalMap[mapPos[0]][mapPos[1]] = '0';
+                    globalMap[mapPos[0]][mapPos[1]] = 50;
             }
         }
     }
     if(localMap[2]>'0' && localMap[2]<'4') //last move was NOT a rotation and robot wasn't hit the wall
     {
         //increment element value when stepped
-        globalMap[manager.getPosX()][manager.getPosY()] = globalMap[manager.getPosX()][manager.getPosY()].digitValue() + 49;
+        globalMap[manager.getPosX()][manager.getPosY()] *= 0.4;
         if(localMap[2]>'1') //fast forward
         {
             //find tiles robot jump over
             mapPos = getSteppedPos(localMap[2], manager.getPosX(), manager.getPosY(), manager.getOrientation());
             //increment element value when jumped over
-            globalMap[mapPos[0]][mapPos[1]] = globalMap[mapPos[0]][mapPos[1]].digitValue() + 49;
+            globalMap[mapPos[0]][mapPos[1]] *= 0.4;
             if(localMap[2]>'2') //rush
             {
                 //increment element value when jumped over
-                globalMap[mapPos[2]][mapPos[3]] = globalMap[mapPos[2]][mapPos[3]].digitValue() + 49;
+                globalMap[mapPos[2]][mapPos[3]] *= 0.4;
             }
         }
+    }
+}
+
+void MapManager::FindDeadEnds(RobotManager &manager)
+{
+    for(int i=0; i<28; i++)
+    {
+
+            if(nearestMap[i]==50)
+            {
+                int sum = 0;
+
+                if(i>1)
+                    sum = nearestMap[i+1]+nearestMap[i-1]+nearestMap[i+7];
+                if(i>7)
+                    sum+=nearestMap[i-7];
+
+                if(sum==47)
+                {
+                   nearestMap[i] = -1;
+                   std::vector<int> mapPos;
+                   mapPos = getGlobalMapPos(manager.getPosX(), manager.getPosY(), i, manager.getOrientation());
+                   globalMap[mapPos[0]][mapPos[1]] = -1;
+                   if(nearestMap[i+1]==50)
+                   {
+                       nearestMap[i+1] = -1;
+                       mapPos = getGlobalMapPos(manager.getPosX(), manager.getPosY(), i+1, manager.getOrientation());
+                   }
+                   if(nearestMap[i-1]==50)
+                   {
+                       nearestMap[i-1] = -1;
+                       mapPos = getGlobalMapPos(manager.getPosX(), manager.getPosY(), i-1, manager.getOrientation());
+                   }
+                   if(nearestMap[i+7]==50)
+                   {
+                       nearestMap[i+7] = -1;
+                       mapPos = getGlobalMapPos(manager.getPosX(), manager.getPosY(), i+7, manager.getOrientation());
+                   }
+                   if(i>7)
+                   {
+                       if(nearestMap[i-7]==50)
+                       {
+                           nearestMap[i-7] = -1;
+                           mapPos = getGlobalMapPos(manager.getPosX(), manager.getPosY(), i-7, manager.getOrientation());
+                       }
+                   }
+                   globalMap[mapPos[0]][mapPos[1]] = -1;
+                }
+            }
+
     }
 }
 
@@ -80,6 +130,8 @@ void MapManager::UpdateNearestMap(RobotManager &manager)
         mapPos = getGlobalMapPos(manager.getPosX(), manager.getPosY(), i, manager.getOrientation());
         nearestMap[i] = globalMap[mapPos[0]][mapPos[1]];
     }
+
+    FindDeadEnds(manager);
 }
 
 std::vector<int> MapManager::getGlobalMapPos(int robotPosX, int robotPosY, int i, ORIENTATION robotOrientation)
@@ -116,6 +168,7 @@ std::vector<int> MapManager::getGlobalMapPos(int robotPosX, int robotPosY, int i
 
     return mapPos;
 }
+
 
 QChar MapManager::getGlobalMapElement(int x, int y)
 {

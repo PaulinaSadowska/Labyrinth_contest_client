@@ -21,13 +21,14 @@ public:
 
     QChar getGlobalMapElement(int x, int y);
     QChar getNearestMapElement(int i);
+    void FindDeadEnds(RobotManager &manager);
 
     void mapInit();
 
 
 private:
-   std::vector<QChar> globalMap[99];
-   QChar nearestMap[28];
+   std::vector<int> globalMap[99];
+   int nearestMap[28];
 };
 
 #endif // GLOBALMAP_H
