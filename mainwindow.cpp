@@ -190,8 +190,7 @@ bool MainWindow::Move()
     }
     case 'F' :
     {
-        if(mapManager.ForwardPoints[0] > mapManager.ForwardPoints[1] &&
-                mapManager.ForwardPoints[0] > (mapManager.ForwardPoints[2]-2))
+        if(mapManager.ForwardPoints[0] > mapManager.ForwardPoints[1])
             MoveForward();
         else
             MoveFastForward();

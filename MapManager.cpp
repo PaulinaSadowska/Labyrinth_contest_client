@@ -31,6 +31,7 @@ void MapManager::UpdateMap(RobotManager &manager, QString &localMap)
      if(FindDeadEnds(manager))
          UpdateNearestMap(manager);
      UpdateDirectionWeights();
+     FindWideCorridor(manager);
 }
 
 void MapManager::UpdateGlobalMap(RobotManager &manager, QString &localMap)
@@ -112,6 +113,43 @@ void MapManager::UpdateDirectionWeights()
         LeftPoints[2]=-1;
     }
 
+}
+
+bool MapManager::FindWideCorridor(RobotManager &manager)
+{
+    std::vector<int> mapPos;
+
+    bool success = false;
+
+    for(int i=0; i<28; i++)
+    {
+
+            if(nearestMap[i]==50)
+            {
+                int sum[2][2] = {{0, 0}, {0, 0}};
+                mapPos = getGlobalMapPos(manager.getPosX(), manager.getPosY(), i, manager.getOrientation());
+
+                sum[0][0] = globalMap[mapPos[0]+1][mapPos[1]] + globalMap[mapPos[0]][mapPos[1]-1]
+                            + globalMap[mapPos[0]+1][mapPos[1]-1];
+                sum[0][1] = globalMap[mapPos[0]-1][mapPos[1]] + globalMap[mapPos[0]][mapPos[1]+1]
+                        + globalMap[mapPos[0]-1][mapPos[1]+1];
+
+                sum[1][0] = globalMap[mapPos[0]+1][mapPos[1]] + globalMap[mapPos[0]][mapPos[1]+1]
+                            + globalMap[mapPos[0]+1][mapPos[1]+1];
+                sum[1][1] = globalMap[mapPos[0]-1][mapPos[1]] + globalMap[mapPos[0]][mapPos[1]-1]
+                        + globalMap[mapPos[0]-1][mapPos[1]-1];
+
+                if(((sum[1][0]>50 && sum[1][0]%2==0)  && sum[1][1]<-2) ||
+                        ((sum[1][1]>50 && sum[1][1]%2==0) && sum[1][0]<-2) ||
+                        ((sum[0][0]>50 && sum[0][0]%2==0) && sum[0][1]<-2) ||
+                        ((sum[0][1]>50 && sum[0][1]%2==0) && sum[0][0]<-2))
+                {
+                   globalMap[mapPos[0]][mapPos[1]] = -1;
+                   nearestMap[i]=-1;
+                }
+            }
+    }
+    return success;
 }
 
 bool MapManager::FindDeadEnds(RobotManager &manager)

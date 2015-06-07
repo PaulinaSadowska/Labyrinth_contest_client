@@ -27,6 +27,7 @@ public:
     QString getNearestMapElementStr(int i);
 
     bool FindDeadEnds(RobotManager &manager);
+    bool FindWideCorridor(RobotManager &manager);
 
     void mapInit();
 
