@@ -114,23 +114,22 @@ void MapManager::UpdateDirectionWeights()
 
 void MapManager::FindDeadEnds(RobotManager &manager)
 {
+    std::vector<int> mapPos;
+
     for(int i=0; i<28; i++)
     {
 
             if(nearestMap[i]==50)
             {
                 int sum = 0;
-
+                mapPos = getGlobalMapPos(manager.getPosX(), manager.getPosY(), i, manager.getOrientation());
                 if(i>1)
-                    sum = nearestMap[i+1]+nearestMap[i-1]+nearestMap[i+7];
-                if(i>7)
-                    sum+=nearestMap[i-7];
+                    sum = globalMap[mapPos[0]+1][mapPos[1]] + globalMap[mapPos[0]-1][mapPos[1]]
+                            + globalMap[mapPos[0]][mapPos[1]-1] + globalMap[mapPos[0]][mapPos[1]+1];
 
                 if(sum==47)
                 {
                    nearestMap[i] = -1;
-                   std::vector<int> mapPos;
-                   mapPos = getGlobalMapPos(manager.getPosX(), manager.getPosY(), i, manager.getOrientation());
                    globalMap[mapPos[0]][mapPos[1]] = -1;
                    if(nearestMap[i+1]==50)
                    {
