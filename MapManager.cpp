@@ -28,6 +28,8 @@ void MapManager::UpdateMap(RobotManager &manager, QString &localMap)
 {
      UpdateGlobalMap(manager, localMap);
      UpdateNearestMap(manager);
+     if(FindDeadEnds(manager))
+         UpdateNearestMap(manager);
      UpdateDirectionWeights();
 }
 
@@ -112,9 +114,11 @@ void MapManager::UpdateDirectionWeights()
 
 }
 
-void MapManager::FindDeadEnds(RobotManager &manager)
+bool MapManager::FindDeadEnds(RobotManager &manager)
 {
     std::vector<int> mapPos;
+
+    bool success = false;
 
     for(int i=0; i<28; i++)
     {
@@ -123,42 +127,43 @@ void MapManager::FindDeadEnds(RobotManager &manager)
             {
                 int sum = 0;
                 mapPos = getGlobalMapPos(manager.getPosX(), manager.getPosY(), i, manager.getOrientation());
-                if(i>1)
-                    sum = globalMap[mapPos[0]+1][mapPos[1]] + globalMap[mapPos[0]-1][mapPos[1]]
+
+                sum = globalMap[mapPos[0]+1][mapPos[1]] + globalMap[mapPos[0]-1][mapPos[1]]
                             + globalMap[mapPos[0]][mapPos[1]-1] + globalMap[mapPos[0]][mapPos[1]+1];
 
-                if(sum==47)
+                if(sum==47 || sum == 17)
                 {
-                   nearestMap[i] = -1;
                    globalMap[mapPos[0]][mapPos[1]] = -1;
+                   success = true;
                    if(nearestMap[i+1]==50)
                    {
-                       nearestMap[i+1] = -1;
                        mapPos = getGlobalMapPos(manager.getPosX(), manager.getPosY(), i+1, manager.getOrientation());
                    }
                    if(nearestMap[i-1]==50)
                    {
-                       nearestMap[i-1] = -1;
                        mapPos = getGlobalMapPos(manager.getPosX(), manager.getPosY(), i-1, manager.getOrientation());
                    }
                    if(nearestMap[i+7]==50)
                    {
-                       nearestMap[i+7] = -1;
                        mapPos = getGlobalMapPos(manager.getPosX(), manager.getPosY(), i+7, manager.getOrientation());
                    }
                    if(i>7)
                    {
                        if(nearestMap[i-7]==50)
-                       {
-                           nearestMap[i-7] = -1;
+                       { 
                            mapPos = getGlobalMapPos(manager.getPosX(), manager.getPosY(), i-7, manager.getOrientation());
                        }
                    }
-                   globalMap[mapPos[0]][mapPos[1]] = -1;
+                   sum = globalMap[mapPos[0]+1][mapPos[1]] + globalMap[mapPos[0]-1][mapPos[1]]
+                               + globalMap[mapPos[0]][mapPos[1]-1] + globalMap[mapPos[0]][mapPos[1]+1];
+                   if(sum==47 || sum == 17)
+                   {
+                       globalMap[mapPos[0]][mapPos[1]] = -1;
+                   }
                 }
             }
-
     }
+    return success;
 }
 
 void MapManager::UpdateNearestMap(RobotManager &manager)
@@ -169,8 +174,6 @@ void MapManager::UpdateNearestMap(RobotManager &manager)
         mapPos = getGlobalMapPos(manager.getPosX(), manager.getPosY(), i, manager.getOrientation());
         nearestMap[i] = globalMap[mapPos[0]][mapPos[1]];
     }
-
-    FindDeadEnds(manager);
 }
 
 std::vector<int> MapManager::getGlobalMapPos(int robotPosX, int robotPosY, int i, ORIENTATION robotOrientation)

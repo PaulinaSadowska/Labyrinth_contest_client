@@ -26,7 +26,7 @@ public:
     QString getGlobalMapElementStr(int x, int y);
     QString getNearestMapElementStr(int i);
 
-    void FindDeadEnds(RobotManager &manager);
+    bool FindDeadEnds(RobotManager &manager);
 
     void mapInit();
 
