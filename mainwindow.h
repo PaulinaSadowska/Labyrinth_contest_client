@@ -62,10 +62,8 @@ private:
     QTextStream socketStream;
     RobotManager robotManager;
     MapManager mapManager;
-    QChar nearMap[28];
-    bool doneFlag;
+    int onePlaceCounter;
 
-    //enum {Right, Forward, Left, Whatever} nextMove;
 
 };
 

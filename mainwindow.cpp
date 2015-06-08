@@ -34,6 +34,8 @@ MainWindow::MainWindow(QWidget *parent) :
         ui->globalMapTable->setColumnWidth(i,20);
     for(int i=0;i<99;i++)
         ui->globalMapTable->setRowHeight(i,20);
+
+    onePlaceCounter = 0;
 }
 
 MainWindow::~MainWindow()
@@ -132,6 +134,7 @@ void MainWindow::new_message()
                 ui->nearestMapTable->item(3-i, j)->setText(mapManager.getNearestMapElementStr(j+7*i));
             }
 
+        onePlaceCounter++;
         Move();
     }
 
@@ -142,6 +145,16 @@ bool MainWindow::Move()
 
     if(LookForFinishLine())
         return true;
+
+    if(onePlaceCounter>2)
+    {
+        if(mapManager.ForwardPoints[0]>0)
+        {
+            MoveForward();
+            onePlaceCounter=0;
+            return true;
+        }
+    }
 
     if((mapManager.LeftPoints[0]==mapManager.RightPoints[0] && (mapManager.RightPoints[1]==0 || mapManager.LeftPoints[1]==0) && mapManager.ForwardPoints[0]<0) ||
             (mapManager.LeftPoints[0]==mapManager.ForwardPoints[0] && mapManager.LeftPoints[1]==0) ||
@@ -194,6 +207,7 @@ bool MainWindow::Move()
             MoveForward();
         else
             MoveFastForward();
+        onePlaceCounter=0;
         return true;
     }
     default :
