@@ -146,7 +146,7 @@ bool MainWindow::Move()
     if(LookForFinishLine())
         return true;
 
-    if(onePlaceCounter>2)
+    if(onePlaceCounter>3)
     {
         if(mapManager.ForwardPoints[0]>0)
         {

@@ -93,24 +93,32 @@ void MapManager::UpdateDirectionWeights()
     //find where is the wall
 
     //wall ahead
-    if(ForwardPoints[0]<0)
+    if(ForwardPoints[0]<0 || nearestMap[10]<0)
     {
+        ForwardPoints[0]=-1;
         ForwardPoints[1]=-1;
         ForwardPoints[2]=-1;
     }
 
     //wall on the right
-    if(RightPoints[0]<0)
+    if(RightPoints[0]<0 || nearestMap[4]<0)
     {
+        RightPoints[0]=-1;
         RightPoints[1]=-1;
         RightPoints[2]=-1;
     }
 
     //wall on the left
-    if(LeftPoints[0]<0)
+    if(LeftPoints[0]<0 || nearestMap[2]<0)
     {
+        LeftPoints[0]=-1;
         LeftPoints[1]=-1;
         LeftPoints[2]=-1;
+    }
+
+    if(ForwardPoints[0]>ForwardPoints[1] && nearestMap[11]<0 && nearestMap[9]<0)
+    {
+        ForwardPoints[1]= ForwardPoints[0]+1;
     }
 
 }
@@ -127,6 +135,7 @@ bool MapManager::FindWideCorridor(RobotManager &manager)
             if(nearestMap[i]==50)
             {
                 int sum[2][2] = {{0, 0}, {0, 0}};
+                int sum2 = 0;
                 mapPos = getGlobalMapPos(manager.getPosX(), manager.getPosY(), i, manager.getOrientation());
 
                 sum[0][0] = globalMap[mapPos[0]+1][mapPos[1]] + globalMap[mapPos[0]][mapPos[1]-1]
@@ -139,10 +148,14 @@ bool MapManager::FindWideCorridor(RobotManager &manager)
                 sum[1][1] = globalMap[mapPos[0]-1][mapPos[1]] + globalMap[mapPos[0]][mapPos[1]-1]
                         + globalMap[mapPos[0]-1][mapPos[1]-1];
 
+                //find when tile is surrounded by free space and only 1 wall
+                sum2 = sum[0][1] + sum[0][0] + globalMap[mapPos[0]-1][mapPos[1]-1] + globalMap[mapPos[0]+1][mapPos[1]+1];
+
                 if(((sum[1][0]>50 && sum[1][0]%2==0)  && sum[1][1]<-2) ||
                         ((sum[1][1]>50 && sum[1][1]%2==0) && sum[1][0]<-2) ||
                         ((sum[0][0]>50 && sum[0][0]%2==0) && sum[0][1]<-2) ||
-                        ((sum[0][1]>50 && sum[0][1]%2==0) && sum[0][0]<-2))
+                        ((sum[0][1]>50 && sum[0][1]%2==0) && sum[0][0]<-2) ||
+                        sum2==259 )
                 {
                    globalMap[mapPos[0]][mapPos[1]] = -1;
                    nearestMap[i]=-1;
