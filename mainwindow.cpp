@@ -173,7 +173,7 @@ bool MainWindow::Move()
     int max = 0;
     char dir;
 
-    if(mapManager.RightPoints[0]>max && mapManager.RightPoints[0]<74)
+    if(mapManager.RightPoints[0]>max && mapManager.RightPoints[0]<74 )
     {
         max = mapManager.RightPoints[0];
         dir = 'R';
@@ -187,6 +187,11 @@ bool MainWindow::Move()
     {
         max = mapManager.LeftPoints[0];
         dir = 'L';
+    }
+    if(mapManager.ForwardPoints[0]==mapManager.RightPoints[0] && mapManager.ForwardPoints[0]%2==0)
+    {
+        max = mapManager.ForwardPoints[0];
+        dir = 'F';
     }
 
     switch(dir)
@@ -223,16 +228,15 @@ bool MainWindow::Move()
 bool MainWindow::LookForFinishLine()
 {
     //if finish line in front of robot
-    if(mapManager.getNearestMapElement(10)>100 ||
-            mapManager.getNearestMapElement(17)>100 ||
-            mapManager.getNearestMapElement(23)>100 ||
+    if(     mapManager.getNearestMapElement(23)>100 ||
             mapManager.getNearestMapElement(24)>100 ||
             mapManager.getNearestMapElement(25)>100)
     {
         Rush();
         return true;
     }
-    if(mapManager.getNearestMapElement(16)>100 ||
+    if(mapManager.getNearestMapElement(17)>100 ||
+            mapManager.getNearestMapElement(16)>100 ||
             mapManager.getNearestMapElement(18)>100 ||
             mapManager.getNearestMapElement(19)>100 ||
             mapManager.getNearestMapElement(15)>100)
@@ -240,14 +244,15 @@ bool MainWindow::LookForFinishLine()
         MoveFastForward();
         return true;
     }
-    if(mapManager.getNearestMapElement(9)>100 ||
+    if(mapManager.getNearestMapElement(10)>100 ||
+            mapManager.getNearestMapElement(9)>100 ||
             mapManager.getNearestMapElement(11)>100)
     {
         MoveForward();
         return true;
     }
     //if finish line is in the right of robot
-    if(mapManager.getNearestMapElement(4)>100 ||
+    if(     mapManager.getNearestMapElement(4)>100 ||
             mapManager.getNearestMapElement(5)>100 ||
             mapManager.getNearestMapElement(6)>100 ||
             mapManager.getNearestMapElement(12)>100 ||
