@@ -166,11 +166,8 @@ bool MainWindow::Move()
             (mapManager.LeftPoints[0]==mapManager.ForwardPoints[0] && mapManager.LeftPoints[1]==0) ||
             (mapManager.RightPoints[0]==mapManager.ForwardPoints[0] && mapManager.RightPoints[1]==0))
     {
-       if(priorityLeft==0)
-       {
             Wait();
             return true;
-       }
     }
 
     //DEAD END
@@ -222,7 +219,9 @@ char MainWindow::ChooseDirection()
 
     if(priorityLeft)
     {
-        if(mapManager.LeftPoints[0]>(max-1) && (mapManager.LeftPoints[0]<74 || mapManager.LeftPoints[0]==500 || mapManager.LeftPoints[1]==500 || mapManager.LeftPoints[2]==500) )
+        if(mapManager.LeftPoints[0]>(max-1) && (mapManager.LeftPoints[0]<74 ||
+            mapManager.LeftPoints[1]==500 || mapManager.LeftPoints[2]==500 ||
+                                            mapManager.ForwardPoints[0]<0) )
         {
                 max = mapManager.LeftPoints[0];
                 dir = 'L';
@@ -240,7 +239,9 @@ char MainWindow::ChooseDirection()
     }
     else
     {
-        if(mapManager.RightPoints[0]>(max-1) && (mapManager.RightPoints[0]<74 || mapManager.RightPoints[0]==500 || mapManager.RightPoints[1]==500 || mapManager.RightPoints[2]==500) )
+        if(mapManager.RightPoints[0]>(max-1) && (mapManager.RightPoints[0]<74 ||
+           mapManager.RightPoints[1]==500 || mapManager.RightPoints[2]==500 ||
+                                                 mapManager.ForwardPoints[0]<0) )
         {
                 max = mapManager.RightPoints[0];
                 dir = 'R';
