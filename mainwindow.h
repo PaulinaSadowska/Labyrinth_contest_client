@@ -53,7 +53,11 @@ private slots:
     void new_message();
 
     void client_disconnected();
+    char ChooseDirection();
+    void CheckPriority();
 
+    void setPriorityLeft();
+    void resetPriorityLeft();
 
 
 private:
@@ -63,7 +67,7 @@ private:
     RobotManager robotManager;
     MapManager mapManager;
     int onePlaceCounter;
-    int sawFinishLine = 0; ///< flag, 1-finish line on the right, 2-finish line on the left
+    bool priorityLeft = false;
 
 
 };

@@ -117,7 +117,7 @@ void MainWindow::new_message()
         {
             robotManager.Init();
             mapManager.mapInit();
-            sawFinishLine = 0;
+            priorityLeft = false;
         }
 
         //update maps (global and nearest)
@@ -166,42 +166,22 @@ bool MainWindow::Move()
             (mapManager.LeftPoints[0]==mapManager.ForwardPoints[0] && mapManager.LeftPoints[1]==0) ||
             (mapManager.RightPoints[0]==mapManager.ForwardPoints[0] && mapManager.RightPoints[1]==0))
     {
-       if(sawFinishLine==0)
-       {    Wait();
+       if(priorityLeft==0)
+       {
+            Wait();
             return true;
        }
     }
 
+    //DEAD END
     if(mapManager.LeftPoints[0]<0 && mapManager.ForwardPoints[0]<0 && mapManager.RightPoints[0]<0)
     {
         RotateRight();
         return true;
     }
 
-    int max = 0;
     char dir;
-
-    if(mapManager.RightPoints[0]>(max-1) && (mapManager.RightPoints[0]<74 || mapManager.RightPoints[0]==500 || mapManager.RightPoints[1]==500 || mapManager.RightPoints[2]==500) )
-    {
-        if(sawFinishLine<2)
-       { max = mapManager.RightPoints[0];
-        dir = 'R';}
-    }
-    if(mapManager.ForwardPoints[0]>max)
-    {
-        max = mapManager.ForwardPoints[0];
-        dir = 'F';
-    }
-    if(mapManager.LeftPoints[0]>(max+6) && mapManager.RightPoints[0]<74)
-    {
-        max = mapManager.LeftPoints[0];
-        dir = 'L';
-    }
-    if(mapManager.ForwardPoints[0]==mapManager.RightPoints[0] && mapManager.ForwardPoints[0]%2==0)
-    {
-        max = mapManager.ForwardPoints[0];
-        dir = 'F';
-    }
+    dir = ChooseDirection();
 
     switch(dir)
     {
@@ -235,58 +215,93 @@ bool MainWindow::Move()
 
 }
 
+char MainWindow::ChooseDirection()
+{
+    int max = 0;
+    char dir;
+
+    if(priorityLeft)
+    {
+        if(mapManager.LeftPoints[0]>(max-1) && (mapManager.LeftPoints[0]<74 || mapManager.LeftPoints[0]==500 || mapManager.LeftPoints[1]==500 || mapManager.LeftPoints[2]==500) )
+        {
+                max = mapManager.LeftPoints[0];
+                dir = 'L';
+        }
+        if(mapManager.ForwardPoints[0]>max)
+        {
+            max = mapManager.ForwardPoints[0];
+            dir = 'F';
+        }
+        if(mapManager.RightPoints[0]>(max+6) && mapManager.LeftPoints[0]<74)
+        {
+            max = mapManager.RightPoints[0];
+            dir = 'R';
+        }
+    }
+    else
+    {
+        if(mapManager.RightPoints[0]>(max-1) && (mapManager.RightPoints[0]<74 || mapManager.RightPoints[0]==500 || mapManager.RightPoints[1]==500 || mapManager.RightPoints[2]==500) )
+        {
+                max = mapManager.RightPoints[0];
+                dir = 'R';
+        }
+        if(mapManager.ForwardPoints[0]>max)
+        {
+            max = mapManager.ForwardPoints[0];
+            dir = 'F';
+        }
+        if(mapManager.LeftPoints[0]>(max+6) && mapManager.RightPoints[0]<74)
+        {
+            max = mapManager.LeftPoints[0];
+            dir = 'L';
+        }
+    }
+    if(mapManager.ForwardPoints[0]==mapManager.RightPoints[0] && mapManager.ForwardPoints[0]%2==0)
+    {
+        max = mapManager.ForwardPoints[0];
+        dir = 'F';
+    }
+    return dir;
+}
+
+void MainWindow::CheckPriority()
+{
+    for(int i=0; i<28; i++)
+    {
+        if(i%7<3)
+        {
+            if(mapManager.getNearestMapElement(i)>100)
+            {
+                setPriorityLeft();
+            }
+        }
+    }
+}
 
 bool MainWindow::LookForFinishLine()
 {
-    if(sawFinishLine==1 && mapManager.RightPoints[0]>0 && mapManager.getNearestMapElement(4)>=mapManager.getNearestMapElement(10))
-    {
-        RotateRight();
-        return true;
-    }
-    if(sawFinishLine==2 && mapManager.LeftPoints[0]>0 && mapManager.getNearestMapElement(2)>=mapManager.getNearestMapElement(10))
-    {
-        RotateLeft();
-        return true;
-    }
+    CheckPriority();
+
     //if finish line in front of robot
     if(     mapManager.getNearestMapElement(23)>100 ||
             mapManager.getNearestMapElement(24)>100 ||
             mapManager.getNearestMapElement(25)>100)
     {
-        Rush();
-        return true;
-    }
-    if(mapManager.getNearestMapElement(17)>100 ||
-            mapManager.getNearestMapElement(16)>100 ||
-            mapManager.getNearestMapElement(18)>100 ||
-            mapManager.getNearestMapElement(19)>100 ||
-            mapManager.getNearestMapElement(15)>100)
-    {
-        MoveFastForward();
-        return true;
-    }
-    if(mapManager.getNearestMapElement(10)>100 ||
-            mapManager.getNearestMapElement(9)>100 ||
-            mapManager.getNearestMapElement(11)>100)
-    {
-        MoveForward();
-        return true;
-    }
-    if(mapManager.getNearestMapElement(12)>100 || mapManager.getNearestMapElement(13)>100)
-    {
-        if(mapManager.getNearestMapElement(4)>0)
+        if(mapManager.ForwardPoints[0]>0)
         {
-            RotateRight();
-            return true;
-        }
-        else if (mapManager.getNearestMapElement(10)>0)
-        {
+            if(mapManager.ForwardPoints[1]>0)
+            {
+                if(mapManager.ForwardPoints[2]>0)
+                {
+                    Rush();
+                    return true;
+                }
+                MoveFastForward();
+                return true;
+            }
             MoveForward();
-            sawFinishLine=1;
             return true;
         }
-        else
-            sawFinishLine=1;
     }
     //if finish line is in the right of robot
     if(     mapManager.getNearestMapElement(4)>100 ||
@@ -298,8 +313,7 @@ bool MainWindow::LookForFinishLine()
             RotateRight();
             return true;
         }
-        else
-            sawFinishLine=1;
+
     }
     //if finish line is in the left of robot
     if(mapManager.getNearestMapElement(0)>100 ||
@@ -311,26 +325,17 @@ bool MainWindow::LookForFinishLine()
             RotateLeft();
             return true;
         }
-        else
-            sawFinishLine=2;
-    }
-    if(mapManager.getNearestMapElement(7)>100 || mapManager.getNearestMapElement(8)>100)
-    {
-        if(mapManager.getNearestMapElement(2)>0)
-        {
-            RotateLeft();
-            return true;
-        }
-        else if (mapManager.getNearestMapElement(4)>0)
-        {
-            MoveForward();
-            sawFinishLine=2;
-            return true;
-        }
-        else
-            sawFinishLine=2;
     }
     return false;
+}
+void MainWindow::setPriorityLeft()
+{
+    priorityLeft = true;
+}
+
+void MainWindow::resetPriorityLeft()
+{
+    priorityLeft = false;
 }
 
 void MainWindow::Rush()
