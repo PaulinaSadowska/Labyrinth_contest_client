@@ -63,6 +63,7 @@ private:
     RobotManager robotManager;
     MapManager mapManager;
     int onePlaceCounter;
+    int sawFinishLine = 0; ///< flag, 1-finish line on the right, 2-finish line on the left
 
 
 };
