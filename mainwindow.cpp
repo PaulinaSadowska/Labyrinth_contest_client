@@ -113,6 +113,8 @@ void MainWindow::new_message()
             robotManager.RotateRight();
         else if(localMap[0]=='L')
             robotManager.RotateLeft();
+
+
         else if(localMap[0]=='X') //new map
         {
             robotManager.Init();
@@ -147,7 +149,7 @@ bool MainWindow::Move()
     if(LookForFinishLine())
         return true;
 
-    if(onePlaceCounter>3)
+    if(onePlaceCounter>4)
     {
         if(mapManager.ForwardPoints[0]>0)
         {

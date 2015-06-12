@@ -21,6 +21,8 @@ void RobotManager::MoveForward(int step)
 {
     if( step < 1 || step > 3 )
         return;
+
+    rotationCounter=0;
     switch(position.orientation)
     {
         case Up : {

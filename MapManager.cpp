@@ -14,13 +14,13 @@ void MapManager::mapInit()
 {
     for(int i=0; i<99; i++)
     {
-        globalMap[i].assign(99, 0);
+        globalMap[i].assign(99, 0); //empty tile
     }
     globalMap[49][49]=20;
 
     for(int i=0; i<28; i++)
     {
-        nearestMap[i] = 0;
+        nearestMap[i] = 0; //empty tile
     }
 }
 
@@ -28,10 +28,14 @@ void MapManager::UpdateMap(RobotManager &manager, QString &localMap)
 {
      UpdateGlobalMap(manager, localMap);
      UpdateNearestMap(manager);
-     if(FindDeadEnds(manager))
-         UpdateNearestMap(manager);
-     UpdateDirectionWeights();
+
+     FindDeadEnds(manager, 2);
+
+     UpdateNearestMap(manager);
+
      FindWideCorridor(manager);
+
+     UpdateDirectionWeights();
 }
 
 void MapManager::UpdateGlobalMap(RobotManager &manager, QString &localMap)
@@ -41,38 +45,54 @@ void MapManager::UpdateGlobalMap(RobotManager &manager, QString &localMap)
     {
         if(localMap[i+4]!='?')
         {
-            mapPos = getGlobalMapPos(manager.getPosX(), manager.getPosY(), i, manager.getOrientation());
+            mapPos = getGlobalMapPos(manager.getPosX(), manager.getPosY(), i, manager.getOrientation()); //current position on global map
             //add element to global map if is not there
-            if(globalMap[mapPos[0]][mapPos[1]]==0)
+            if(globalMap[mapPos[0]][mapPos[1]]==0) //global map element is empty
             {
                 if(localMap[i+4]!='.')
                 {
                     if(localMap[i+4]=='O' || localMap[i+4] == '#')
-                        globalMap[mapPos[0]][mapPos[1]] = -1;
+                        globalMap[mapPos[0]][mapPos[1]] = -1; //wall
                     else if(localMap[i+4]=='E')
-                        globalMap[mapPos[0]][mapPos[1]] = 500;
+                        globalMap[mapPos[0]][mapPos[1]] = 500; //finish line
                 }
                 else
-                    globalMap[mapPos[0]][mapPos[1]] = 50;
+                    globalMap[mapPos[0]][mapPos[1]] = 50; //passage
             }
         }
     }
     if(localMap[2]>'0' && localMap[2]<'4') //last move was NOT a rotation and robot wasn't hit the wall
     {
+        //find tiles robot jump over
+        mapPos = getSteppedPos(manager.getPosX(), manager.getPosY(), manager.getOrientation());
+
         //increment element value when stepped
-        globalMap[manager.getPosX()][manager.getPosY()] *= 0.4;
+        globalMap[mapPos[0]][mapPos[1]] *= 0.4;
+        int stepSize = 1;
         if(localMap[2]>'1') //fast forward
         {
-            //find tiles robot jump over
-            mapPos = getSteppedPos(localMap[2], manager.getPosX(), manager.getPosY(), manager.getOrientation());
             //increment element value when jumped over
-            globalMap[mapPos[0]][mapPos[1]] *= 0.4;
+            globalMap[mapPos[2]][mapPos[3]] *= 0.4;
+            stepSize = 2;
             if(localMap[2]>'2') //rush
             {
+                stepSize=3;
                 //increment element value when jumped over
-                globalMap[mapPos[2]][mapPos[3]] *= 0.4;
+                globalMap[mapPos[4]][mapPos[5]] *= 0.4;
             }
         }
+       /* if(deadEndFlag)
+        {
+            for(int i=0; i<stepSize; i++)
+            {
+                int sum1 = globalMap[mapPos[2*i]+1][mapPos[2*i+1]] + globalMap[mapPos[2*i]-1][mapPos[2*i+1]];
+                int sum2 = globalMap[mapPos[2*i]][mapPos[2*i+1]+1] + globalMap[mapPos[2*i]][mapPos[2*i+1]-1];
+                if((sum1<-1 && sum2<29) || (sum2<-1 && sum1<29) )
+                {
+                    globalMap[mapPos[2*i]][mapPos[2*i+1]] = -1; //dead end, replace with wall symbol
+                }
+            }
+        }*/
     }
 }
 
@@ -116,19 +136,28 @@ void MapManager::UpdateDirectionWeights()
         LeftPoints[2]=-1;
     }
 
-    if(ForwardPoints[0]>ForwardPoints[1] && nearestMap[11]<0 && nearestMap[9]<0)
+    //when F[1] is crossing roads stepped 2 times and F[0] is stepped only 1 time I still want to make bigger step
+    if(ForwardPoints[0]>ForwardPoints[1] && nearestMap[11]<0 && nearestMap[9]<0 && nearestMap[10]<500)
     {
-        ForwardPoints[1]= ForwardPoints[0]+1;
+        ForwardPoints[1] = ForwardPoints[0] + 1;
     }
+
+    //found finish line in F[1]
+    if(ForwardPoints[0]>0 && ForwardPoints[1]>298)
+    {
+        ForwardPoints[0] = ForwardPoints[1] - 50;
+    }
+
 
 }
 
-bool MapManager::FindWideCorridor(RobotManager &manager)
+///helps with some wide corridors, but only when robot is completely sore there is wide corridor.
+/// Function is not perfect and I afraid it can crash algorithm sometimes
+/// and sometimes it will be just not enough to prevent robot from stucking in wide corridors
+/// but in many cases is very very helpful
+void MapManager::FindWideCorridor(RobotManager &manager)
 {
     std::vector<int> mapPos;
-
-    bool success = false;
-
     for(int i=0; i<28; i++)
     {
 
@@ -138,6 +167,7 @@ bool MapManager::FindWideCorridor(RobotManager &manager)
                 int sum2 = 0;
                 mapPos = getGlobalMapPos(manager.getPosX(), manager.getPosY(), i, manager.getOrientation());
 
+                //cut too wide corners
                 sum[0][0] = globalMap[mapPos[0]+1][mapPos[1]] + globalMap[mapPos[0]][mapPos[1]-1]
                             + globalMap[mapPos[0]+1][mapPos[1]-1];
                 sum[0][1] = globalMap[mapPos[0]-1][mapPos[1]] + globalMap[mapPos[0]][mapPos[1]+1]
@@ -151,10 +181,10 @@ bool MapManager::FindWideCorridor(RobotManager &manager)
                 //find when tile is surrounded by free space and only 1 wall
                 sum2 = sum[0][1] + sum[0][0] + globalMap[mapPos[0]-1][mapPos[1]-1] + globalMap[mapPos[0]+1][mapPos[1]+1];
 
-                if(((sum[1][0]>50 && sum[1][0]%2==0)  && sum[1][1]<-2) ||
-                        ((sum[1][1]>50 && sum[1][1]%2==0) && sum[1][0]<-2) ||
-                        ((sum[0][0]>50 && sum[0][0]%2==0) && sum[0][1]<-2) ||
-                        ((sum[0][1]>50 && sum[0][1]%2==0) && sum[0][0]<-2) ||
+                if(((sum[1][0]>89 && sum[1][0]%2==0)  && ((sum[1][1]<-1 && globalMap[mapPos[0]-1][mapPos[1]-1]==0) || sum[1][1]<-2)) ||
+                        ((sum[1][1]>89 && sum[1][1]%2==0) && ((sum[1][0]<-1 && globalMap[mapPos[0]+1][mapPos[1]+1]==0) || sum[1][0]<-2)) ||
+                        ((sum[0][0]>89 && sum[0][0]%2==0) && ((sum[0][1]<-1 && globalMap[mapPos[0]-1][mapPos[1]+1]==0) || sum[0][1]<-2)) ||
+                        ((sum[0][1]>89 && sum[0][1]%2==0) && ((sum[0][0]<-1 && globalMap[mapPos[0]+1][mapPos[1]-1]==0) || sum[0][0]<-2)) ||
                         sum2==259 )
                 {
                    globalMap[mapPos[0]][mapPos[1]] = -1;
@@ -162,57 +192,50 @@ bool MapManager::FindWideCorridor(RobotManager &manager)
                 }
             }
     }
-    return success;
 }
 
-bool MapManager::FindDeadEnds(RobotManager &manager)
+bool MapManager::FindDeadEnds(RobotManager &manager, int iterations)
 {
-    std::vector<int> mapPos;
+    //current position of the robot
+    int posX;
+    int posY;
 
     bool success = false;
 
-    for(int i=0; i<28; i++)
+    posX = manager.getPosX();
+    posY = manager.getPosY();
+
+    if(posX>4 && posX<95 && posY>4 && posY<95)
     {
-
-            if(nearestMap[i]==50)
+        for(int k=0; k<iterations; k++)
+        {
+            for(int i=posX-4; i<posX+4; i++)
             {
-                int sum = 0;
-                mapPos = getGlobalMapPos(manager.getPosX(), manager.getPosY(), i, manager.getOrientation());
-
-                sum = globalMap[mapPos[0]+1][mapPos[1]] + globalMap[mapPos[0]-1][mapPos[1]]
-                            + globalMap[mapPos[0]][mapPos[1]-1] + globalMap[mapPos[0]][mapPos[1]+1];
-
-                if(sum==47 || sum == 17)
+                for(int j=posY-4; j<posY+4; j++)
                 {
-                   globalMap[mapPos[0]][mapPos[1]] = -1;
-                   success = true;
-                   if(nearestMap[i+1]==50)
-                   {
-                       mapPos = getGlobalMapPos(manager.getPosX(), manager.getPosY(), i+1, manager.getOrientation());
-                   }
-                   if(nearestMap[i-1]==50)
-                   {
-                       mapPos = getGlobalMapPos(manager.getPosX(), manager.getPosY(), i-1, manager.getOrientation());
-                   }
-                   if(nearestMap[i+7]==50)
-                   {
-                       mapPos = getGlobalMapPos(manager.getPosX(), manager.getPosY(), i+7, manager.getOrientation());
-                   }
-                   if(i>7)
-                   {
-                       if(nearestMap[i-7]==50)
-                       { 
-                           mapPos = getGlobalMapPos(manager.getPosX(), manager.getPosY(), i-7, manager.getOrientation());
-                       }
-                   }
-                   sum = globalMap[mapPos[0]+1][mapPos[1]] + globalMap[mapPos[0]-1][mapPos[1]]
-                               + globalMap[mapPos[0]][mapPos[1]-1] + globalMap[mapPos[0]][mapPos[1]+1];
-                   if(sum==47 || sum == 17)
-                   {
-                       globalMap[mapPos[0]][mapPos[1]] = -1;
-                   }
+
+                    if(posX!=i || posY!=j)
+                    {
+                        if(globalMap[i][j]==50 || globalMap[i][j]==20 || globalMap[i][j]==8)
+                        {
+                            int sum = 0;
+                            int iloczyn = 0;
+
+                            sum = globalMap[i+1][j] + globalMap[i-1][j]
+                                + globalMap[i][j-1] + globalMap[i][j+1];
+                            iloczyn = globalMap[i+1][j] * globalMap[i-1][j]
+                                * globalMap[i][j-1] * globalMap[i][j+1];
+
+                        if((sum==47 || sum == 17 || sum == 5 || sum == 0) && iloczyn>(-51) && iloczyn<0)
+                        {
+                            globalMap[i][j] = -1;
+                            success = true;
+                        }
+                        }
+                    }
                 }
             }
+        }
     }
     return success;
 }
@@ -317,9 +340,11 @@ QString MapManager::getNearestMapElementStr(int i)
 
 }
 
-std::vector<int> MapManager::getSteppedPos(QChar stepSize, int robotPosX, int robotPosY, ORIENTATION robotOrientation)
+std::vector<int> MapManager::getSteppedPos(int robotPosX, int robotPosY, ORIENTATION robotOrientation)
 {
     std::vector <int> mapPos;
+    mapPos.push_back(robotPosX);
+    mapPos.push_back(robotPosY);
 
     switch(robotOrientation)
     {
