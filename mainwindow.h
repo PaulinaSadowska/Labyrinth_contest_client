@@ -65,7 +65,6 @@ private slots:
     ///sets priorityLeft False
     void resetPriorityLeft();
 
-
 private:
     Ui::MainWindow *ui;
     QTcpSocket* socket;

@@ -81,18 +81,6 @@ void MapManager::UpdateGlobalMap(RobotManager &manager, QString &localMap)
                 globalMap[mapPos[4]][mapPos[5]] *= 0.4;
             }
         }
-       /* if(deadEndFlag)
-        {
-            for(int i=0; i<stepSize; i++)
-            {
-                int sum1 = globalMap[mapPos[2*i]+1][mapPos[2*i+1]] + globalMap[mapPos[2*i]-1][mapPos[2*i+1]];
-                int sum2 = globalMap[mapPos[2*i]][mapPos[2*i+1]+1] + globalMap[mapPos[2*i]][mapPos[2*i+1]-1];
-                if((sum1<-1 && sum2<29) || (sum2<-1 && sum1<29) )
-                {
-                    globalMap[mapPos[2*i]][mapPos[2*i+1]] = -1; //dead end, replace with wall symbol
-                }
-            }
-        }*/
     }
 }
 

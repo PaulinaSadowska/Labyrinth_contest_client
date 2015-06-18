@@ -245,6 +245,9 @@
       <height>401</height>
      </rect>
     </property>
+    <property name="autoScrollMargin">
+     <number>17</number>
+    </property>
     <property name="rowCount">
      <number>99</number>
     </property>

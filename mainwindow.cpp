@@ -35,6 +35,10 @@ MainWindow::MainWindow(QWidget *parent) :
     for(int i=0;i<99;i++)
         ui->globalMapTable->setRowHeight(i,20);
 
+    QTableWidgetItem *item = ui->globalMapTable->item(49, 49);
+    ui->globalMapTable->scrollToItem(item);
+    ui->globalMapTable->scrollToItem(item); //didn't scroll in both axis when not called two times -.
+
     onePlaceCounter = 0;
 }
 
@@ -279,7 +283,10 @@ void MainWindow::CheckPriority()
             }
         }
     }
+
 }
+
+
 
 bool MainWindow::LookForFinishLine()
 {
