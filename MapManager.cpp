@@ -67,18 +67,21 @@ void MapManager::UpdateGlobalMap(RobotManager &manager, QString &localMap)
         mapPos = getSteppedPos(manager.getPosX(), manager.getPosY(), manager.getOrientation());
 
         //increment element value when stepped
-        globalMap[mapPos[0]][mapPos[1]] *= 0.4;
+        if(globalMap[mapPos[0]][mapPos[1]]>1)
+            globalMap[mapPos[0]][mapPos[1]] *= 0.4;
         int stepSize = 1;
         if(localMap[2]>'1') //fast forward
         {
             //increment element value when jumped over
-            globalMap[mapPos[2]][mapPos[3]] *= 0.4;
+            if(globalMap[mapPos[2]][mapPos[3]]>1)
+                globalMap[mapPos[2]][mapPos[3]] *= 0.4;
             stepSize = 2;
             if(localMap[2]>'2') //rush
             {
                 stepSize=3;
                 //increment element value when jumped over
-                globalMap[mapPos[4]][mapPos[5]] *= 0.4;
+                if(globalMap[mapPos[4]][mapPos[5]]>1)
+                    globalMap[mapPos[4]][mapPos[5]] *= 0.4;
             }
         }
     }
@@ -204,7 +207,8 @@ bool MapManager::FindDeadEnds(RobotManager &manager, int iterations)
 
                     if(posX!=i || posY!=j)
                     {
-                        if(globalMap[i][j]==50 || globalMap[i][j]==20 || globalMap[i][j]==8)
+                        if(globalMap[i][j]==50 || globalMap[i][j]==20 ||
+                                globalMap[i][j]==8 || globalMap[i][j]==3 || globalMap[i][j]==1)
                         {
                             int sum = 0;
                             int iloczyn = 0;
@@ -286,35 +290,28 @@ int MapManager::getNearestMapElement(int i){
 QString MapManager::getGlobalMapElementStr(int x, int y)
 {
     int element = globalMap[x][y];
-    if(element>0)
-    {
-        if(element == 50)
-            return "3";
-        if(element == 20)
-            return "2";
-        if(element == 8)
-            return "1";
-    }
-    if(element<0)
-        return "#";
-    if(element==0)
-        return " ";
-    if(element == 500)
-        return "E";
-
-    return 0;
+    return getMapElementStr(element);
 }
 
 QString MapManager::getNearestMapElementStr(int i)
 {
     int element = nearestMap[i];
+    return getMapElementStr(element);
+}
+
+QString MapManager::getMapElementStr(int element)
+{
     if(element>0)
     {
         if(element == 50)
-            return "3";
+            return "5";
         if(element == 20)
-            return "2";
+            return "4";
         if(element == 8)
+            return "3";
+        if(element == 3)
+            return "2";
+        if(element == 1)
             return "1";
     }
     if(element<0)

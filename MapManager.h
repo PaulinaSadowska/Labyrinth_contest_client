@@ -48,6 +48,10 @@ public:
     /// \returns local map element
     int getNearestMapElement(int i);
 
+    /// \param element value of tile from map
+    /// \returns map element
+    QString getMapElementStr(int element);
+
     /// returns string representation of global map element
     ///  \param x coordinate in X axis
     /// \param y coordinate in Y axis

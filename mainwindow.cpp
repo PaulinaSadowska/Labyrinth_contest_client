@@ -35,7 +35,7 @@ MainWindow::MainWindow(QWidget *parent) :
     for(int i=0;i<99;i++)
         ui->globalMapTable->setRowHeight(i,20);
 
-    QTableWidgetItem *item = ui->globalMapTable->item(49, 49);
+    QTableWidgetItem *item = ui->globalMapTable->item(60, 45);
     ui->globalMapTable->scrollToItem(item);
     ui->globalMapTable->scrollToItem(item); //didn't scroll in both axis when not called two times -.
 
@@ -142,17 +142,19 @@ void MainWindow::new_message()
             }
 
         onePlaceCounter++;
-        Move();
+        if(!Move())
+            RotateRight();
     }
 
 }
 
 bool MainWindow::Move()
 {
-
+    CheckPriority();
     if(LookForFinishLine())
         return true;
 
+    //when robot stuck in the same position for 4 or more moves
     if(onePlaceCounter>4)
     {
         if(mapManager.ForwardPoints[0]>0)
@@ -161,13 +163,13 @@ bool MainWindow::Move()
             return true;
         }
     }
-
+    //when it can't go up and don't know what's on sides
     if(mapManager.LeftPoints[0]==0 && mapManager.ForwardPoints[0]<0 && mapManager.RightPoints[0]==0)
     {
         RotateRight();
         return true;
     }
-
+    //don't know what's on one of the sides
     if((mapManager.LeftPoints[0]==mapManager.RightPoints[0] && (mapManager.RightPoints[1]==0 || mapManager.LeftPoints[1]==0) && mapManager.ForwardPoints[0]<0) ||
             (mapManager.LeftPoints[0]==mapManager.ForwardPoints[0] && mapManager.LeftPoints[1]==0) ||
             (mapManager.RightPoints[0]==mapManager.ForwardPoints[0] && mapManager.RightPoints[1]==0))
@@ -177,7 +179,9 @@ bool MainWindow::Move()
     }
 
     //DEAD END
-    if(mapManager.LeftPoints[0]<0 && mapManager.ForwardPoints[0]<0 && mapManager.RightPoints[0]<0)
+    //check if not stuck in dead end
+    //(dead ends are eliminated but just in case it didn't recognize the spot as a dead end and steps into it)
+    if(mapManager.LeftPoints[0]<1 && mapManager.ForwardPoints[0]<1 && mapManager.RightPoints[0]<1)
     {
         RotateRight();
         return true;
@@ -237,7 +241,8 @@ char MainWindow::ChooseDirection()
             max = mapManager.ForwardPoints[0];
             dir = 'F';
         }
-        if(mapManager.RightPoints[0]>(max+6) && mapManager.LeftPoints[0]<74)
+        if(mapManager.RightPoints[0]>(max+6) && mapManager.LeftPoints[0]<74 ||
+                mapManager.RightPoints[1]==500 || mapManager.RightPoints[2]==500 )
         {
             max = mapManager.RightPoints[0];
             dir = 'R';
@@ -257,7 +262,8 @@ char MainWindow::ChooseDirection()
             max = mapManager.ForwardPoints[0];
             dir = 'F';
         }
-        if(mapManager.LeftPoints[0]>(max+6) && mapManager.RightPoints[0]<74)
+        if(mapManager.LeftPoints[0]>(max+6) && mapManager.RightPoints[0]<74 ||
+                mapManager.LeftPoints[1]==500 || mapManager.LeftPoints[2]==500 )
         {
             max = mapManager.LeftPoints[0];
             dir = 'L';
@@ -290,7 +296,6 @@ void MainWindow::CheckPriority()
 
 bool MainWindow::LookForFinishLine()
 {
-    CheckPriority();
 
     //if finish line in front of robot
     if(     mapManager.getNearestMapElement(23)>100 ||
