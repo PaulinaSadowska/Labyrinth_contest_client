@@ -67,7 +67,7 @@ public:
     bool FindDeadEnds(RobotManager &manager, int iterations);
 
     /// finds and eliminates SOME (not all :() wide corridors on local and global map (checks only nearest tiles)
-    void FindWideCorridor(RobotManager &manager);
+    bool FindWideCorridor(RobotManager &manager);
 
     ///inits all maps
     void mapInit();

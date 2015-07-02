@@ -31,9 +31,11 @@ void MapManager::UpdateMap(RobotManager &manager, QString &localMap)
 
      FindDeadEnds(manager, 2);
 
-     UpdateNearestMap(manager);
+     int maxloop = 15;
+     while(FindWideCorridor(manager) && maxloop)
+         maxloop--;
 
-     FindWideCorridor(manager);
+     UpdateNearestMap(manager);
 
      UpdateDirectionWeights();
 }
@@ -143,46 +145,56 @@ void MapManager::UpdateDirectionWeights()
 }
 
 ///helps with some wide corridors, but only when robot is completely sore there is wide corridor.
-/// Function is not perfect and I afraid it can crash algorithm sometimes
-/// and sometimes it will be just not enough to prevent robot from stucking in wide corridors
+/// Function is not perfect and sometimes it will be just not enough to prevent robot from stucking in wide corridors
 /// but in many cases is very very helpful
-void MapManager::FindWideCorridor(RobotManager &manager)
+bool MapManager::FindWideCorridor(RobotManager &manager)
 {
+    bool flag = false;
     std::vector<int> mapPos;
-    for(int i=0; i<28; i++)
+    mapPos.assign(2, 0);
+    int posX = manager.getPosX();
+    int posY = manager.getPosY();
+    for(int x = -4; x<4; x++)
     {
-
-            if(nearestMap[i]==50)
+        for(int y = -4; y<4; y++)
+        {
+            if(posX+x < 99 && posX+x > 0 && posY+y < 99 && posY+y > 0 && (x!=0 || y!=0))
             {
-                int sum[2][2] = {{0, 0}, {0, 0}};
-                int sum2 = 0;
-                mapPos = getGlobalMapPos(manager.getPosX(), manager.getPosY(), i, manager.getOrientation());
-
-                //cut too wide corners
-                sum[0][0] = globalMap[mapPos[0]+1][mapPos[1]] + globalMap[mapPos[0]][mapPos[1]-1]
-                            + globalMap[mapPos[0]+1][mapPos[1]-1];
-                sum[0][1] = globalMap[mapPos[0]-1][mapPos[1]] + globalMap[mapPos[0]][mapPos[1]+1]
-                        + globalMap[mapPos[0]-1][mapPos[1]+1];
-
-                sum[1][0] = globalMap[mapPos[0]+1][mapPos[1]] + globalMap[mapPos[0]][mapPos[1]+1]
-                            + globalMap[mapPos[0]+1][mapPos[1]+1];
-                sum[1][1] = globalMap[mapPos[0]-1][mapPos[1]] + globalMap[mapPos[0]][mapPos[1]-1]
-                        + globalMap[mapPos[0]-1][mapPos[1]-1];
-
-                //find when tile is surrounded by free space and only 1 wall
-                sum2 = sum[0][1] + sum[0][0] + globalMap[mapPos[0]-1][mapPos[1]-1] + globalMap[mapPos[0]+1][mapPos[1]+1];
-
-                if(((sum[1][0]>89 && sum[1][0]%2==0)  && ((sum[1][1]<-1 && globalMap[mapPos[0]-1][mapPos[1]-1]==0) || sum[1][1]<-2)) ||
-                        ((sum[1][1]>89 && sum[1][1]%2==0) && ((sum[1][0]<-1 && globalMap[mapPos[0]+1][mapPos[1]+1]==0) || sum[1][0]<-2)) ||
-                        ((sum[0][0]>89 && sum[0][0]%2==0) && ((sum[0][1]<-1 && globalMap[mapPos[0]-1][mapPos[1]+1]==0) || sum[0][1]<-2)) ||
-                        ((sum[0][1]>89 && sum[0][1]%2==0) && ((sum[0][0]<-1 && globalMap[mapPos[0]+1][mapPos[1]-1]==0) || sum[0][0]<-2)) ||
-                        sum2==259 )
+                mapPos[0] = posX+x;
+                mapPos[1] = posY+y;
+                if(globalMap[mapPos[0]][mapPos[1]]>0 && globalMap[mapPos[0]][mapPos[1]]<51)
                 {
-                   globalMap[mapPos[0]][mapPos[1]] = -1;
-                   nearestMap[i]=-1;
+                    int sum[2][2] = {{0, 0}, {0, 0}};
+                    int sum2 = 0;
+
+                    //cut too wide corners
+                    sum[0][0] = globalMap[mapPos[0]+1][mapPos[1]] + globalMap[mapPos[0]][mapPos[1]-1]
+                            + globalMap[mapPos[0]+1][mapPos[1]-1];
+                    sum[0][1] = globalMap[mapPos[0]-1][mapPos[1]] + globalMap[mapPos[0]][mapPos[1]+1]
+                            + globalMap[mapPos[0]-1][mapPos[1]+1];
+
+                    sum[1][0] = globalMap[mapPos[0]+1][mapPos[1]] + globalMap[mapPos[0]][mapPos[1]+1]
+                            + globalMap[mapPos[0]+1][mapPos[1]+1];
+                    sum[1][1] = globalMap[mapPos[0]-1][mapPos[1]] + globalMap[mapPos[0]][mapPos[1]-1]
+                            + globalMap[mapPos[0]-1][mapPos[1]-1];
+
+                    //find when tile is surrounded by free space and only 1 wall
+                    sum2 = sum[0][1] + sum[0][0] + globalMap[mapPos[0]-1][mapPos[1]-1] + globalMap[mapPos[0]+1][mapPos[1]+1];
+
+                    if(((sum[1][0]>89 && sum[1][0]%2==0)  && ((sum[1][1]<-1 && globalMap[mapPos[0]-1][mapPos[1]-1]==0) || sum[1][1]<-2)) ||
+                            ((sum[1][1]>89 && sum[1][1]%2==0) && ((sum[1][0]<-1 && globalMap[mapPos[0]+1][mapPos[1]+1]==0) || sum[1][0]<-2)) ||
+                            ((sum[0][0]>89 && sum[0][0]%2==0) && ((sum[0][1]<-1 && globalMap[mapPos[0]-1][mapPos[1]+1]==0) || sum[0][1]<-2)) ||
+                            ((sum[0][1]>89 && sum[0][1]%2==0) && ((sum[0][0]<-1 && globalMap[mapPos[0]+1][mapPos[1]-1]==0) || sum[0][0]<-2)) ||
+                            sum2==259 )
+                    {
+                        globalMap[mapPos[0]][mapPos[1]] = -1;
+                        flag = true;
+                    }
                 }
             }
+        }
     }
+    return flag;
 }
 
 bool MapManager::FindDeadEnds(RobotManager &manager, int iterations)
