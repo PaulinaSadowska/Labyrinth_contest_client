@@ -69,20 +69,20 @@ void MapManager::UpdateGlobalMap(RobotManager &manager, QString &localMap)
         mapPos = getSteppedPos(manager.getPosX(), manager.getPosY(), manager.getOrientation());
 
         //increment element value when stepped
-        if(globalMap[mapPos[0]][mapPos[1]]>1)
+        if(globalMap[mapPos[0]][mapPos[1]]>3)
             globalMap[mapPos[0]][mapPos[1]] *= 0.4;
         int stepSize = 1;
         if(localMap[2]>'1') //fast forward
         {
             //increment element value when jumped over
-            if(globalMap[mapPos[2]][mapPos[3]]>1)
+            if(globalMap[mapPos[2]][mapPos[3]]>3)
                 globalMap[mapPos[2]][mapPos[3]] *= 0.4;
             stepSize = 2;
             if(localMap[2]>'2') //rush
             {
                 stepSize=3;
                 //increment element value when jumped over
-                if(globalMap[mapPos[4]][mapPos[5]]>1)
+                if(globalMap[mapPos[4]][mapPos[5]]>3)
                     globalMap[mapPos[4]][mapPos[5]] *= 0.4;
             }
         }
@@ -154,9 +154,9 @@ bool MapManager::FindWideCorridor(RobotManager &manager)
     mapPos.assign(2, 0);
     int posX = manager.getPosX();
     int posY = manager.getPosY();
-    for(int x = -4; x<4; x++)
+    for(int x = -5; x<5; x++)
     {
-        for(int y = -4; y<4; y++)
+        for(int y = -5; y<5; y++)
         {
             if(posX+x < 99 && posX+x > 0 && posY+y < 99 && posY+y > 0 && (x!=0 || y!=0))
             {
@@ -181,11 +181,12 @@ bool MapManager::FindWideCorridor(RobotManager &manager)
                     //find when tile is surrounded by free space and only 1 wall
                     sum2 = sum[0][1] + sum[0][0] + globalMap[mapPos[0]-1][mapPos[1]-1] + globalMap[mapPos[0]+1][mapPos[1]+1];
 
-                    if(((sum[1][0]>89 && sum[1][0]%2==0)  && ((sum[1][1]<-1 && globalMap[mapPos[0]-1][mapPos[1]-1]==0) || sum[1][1]<-2)) ||
-                            ((sum[1][1]>89 && sum[1][1]%2==0) && ((sum[1][0]<-1 && globalMap[mapPos[0]+1][mapPos[1]+1]==0) || sum[1][0]<-2)) ||
-                            ((sum[0][0]>89 && sum[0][0]%2==0) && ((sum[0][1]<-1 && globalMap[mapPos[0]-1][mapPos[1]+1]==0) || sum[0][1]<-2)) ||
-                            ((sum[0][1]>89 && sum[0][1]%2==0) && ((sum[0][0]<-1 && globalMap[mapPos[0]+1][mapPos[1]-1]==0) || sum[0][0]<-2)) ||
-                            sum2==259 )
+
+                    if((((sum[1][0]>89 || sum[1][0]==60) && sum[1][0]%2==0)  && ((sum[1][1]<-1 && globalMap[mapPos[0]-1][mapPos[1]-1]==0) || sum[1][1]<-2)) ||
+                            (((sum[1][1]>89 || sum[1][1]==60) && sum[1][1]%2==0) && ((sum[1][0]<-1 && globalMap[mapPos[0]+1][mapPos[1]+1]==0) || sum[1][0]<-2)) ||
+                            (((sum[0][0]>89 || sum[0][0]==60) && sum[0][0]%2==0) && ((sum[0][1]<-1 && globalMap[mapPos[0]-1][mapPos[1]+1]==0) || sum[0][1]<-2)) ||
+                            (((sum[0][1]>89 || sum[0][1]==60) && sum[0][1]%2==0) && ((sum[0][0]<-1 && globalMap[mapPos[0]+1][mapPos[1]-1]==0) || sum[0][0]<-2)) ||
+                            sum2==259 || sum2==229)
                     {
                         globalMap[mapPos[0]][mapPos[1]] = -1;
                         flag = true;
@@ -292,23 +293,37 @@ std::vector<int> MapManager::getGlobalMapPos(int robotPosX, int robotPosY, int i
 
 int MapManager::getGlobalMapElement(int x, int y)
 {
-    return globalMap[x][y];
+    if(x<100 && x>-1 && y<100 && y>-1)
+        return globalMap[x][y];
+
+    return 0;
 }
 
 int MapManager::getNearestMapElement(int i){
-    return nearestMap[i];
+    if(i<28 && i>-1)
+        return nearestMap[i];
+
+    return 0;
 }
 
 QString MapManager::getGlobalMapElementStr(int x, int y)
 {
-    int element = globalMap[x][y];
-    return getMapElementStr(element);
+    if(x<100 && x>-1 && y<100 && y>-1)
+    {
+        int element = globalMap[x][y];
+        return getMapElementStr(element);
+    }
+    return "X";
 }
 
 QString MapManager::getNearestMapElementStr(int i)
 {
-    int element = nearestMap[i];
-    return getMapElementStr(element);
+    if(i>-1 && i<28)
+    {
+        int element = nearestMap[i];
+        return getMapElementStr(element);
+    }
+    return "X";
 }
 
 QString MapManager::getMapElementStr(int element)

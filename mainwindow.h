@@ -73,6 +73,7 @@ private:
     MapManager mapManager;     ///< object used to manage maps
     int onePlaceCounter;       ///< counts how many times robot stays in the same place
     bool priorityLeft = false; ///< become true when finish line was found on the left
+    std::vector<int> goalPos;            ///<position on the global map of the end tile if it's known (our goal is to get there)
 
 
 };

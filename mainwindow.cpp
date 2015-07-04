@@ -40,6 +40,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->globalMapTable->scrollToItem(item); //didn't scroll in both axis when not called two times -.
 
     onePlaceCounter = 0;
+
+    goalPos.assign(2, 0); //goal tile unknown
 }
 
 MainWindow::~MainWindow()
@@ -123,7 +125,10 @@ void MainWindow::new_message()
         {
             robotManager.Init();
             mapManager.mapInit();
-            priorityLeft = false;
+            resetPriorityLeft();
+            //position of a goal tile not known
+            goalPos[0]=-1;
+            goalPos[1]=-1;
         }
 
         //update maps (global and nearest)
@@ -206,8 +211,8 @@ bool MainWindow::Move()
     {
         if(mapManager.ForwardPoints[0] > mapManager.ForwardPoints[1])
             MoveForward();
-        else if(mapManager.ForwardPoints[0]==mapManager.ForwardPoints[1] &&
-                mapManager.ForwardPoints[0]<49)
+        else if((mapManager.ForwardPoints[0]==mapManager.ForwardPoints[1] && mapManager.ForwardPoints[0]<49) ||
+                (mapManager.ForwardPoints[2]>73 && mapManager.ForwardPoints[1]==49 && mapManager.ForwardPoints[0]==49))
             Rush();
         else
             MoveFastForward();
@@ -241,8 +246,8 @@ char MainWindow::ChooseDirection()
             max = mapManager.ForwardPoints[0];
             dir = 'F';
         }
-        if(mapManager.RightPoints[0]>(max+6) && mapManager.LeftPoints[0]<74 ||
-                mapManager.RightPoints[1]==500 || mapManager.RightPoints[2]==500 )
+        if((mapManager.RightPoints[0]>(max+1) && mapManager.LeftPoints[0]<74) ||
+                mapManager.RightPoints[1]>=500 || mapManager.RightPoints[2]>=500 )
         {
             max = mapManager.RightPoints[0];
             dir = 'R';
@@ -250,9 +255,9 @@ char MainWindow::ChooseDirection()
     }
     else
     {
-        if(mapManager.RightPoints[0]>(max-1) && (mapManager.RightPoints[0]<74 ||
+        if((mapManager.RightPoints[0]>(max-1) && mapManager.RightPoints[0]<74) ||
            mapManager.RightPoints[1]==500 || mapManager.RightPoints[2]==500 ||
-                                                 mapManager.ForwardPoints[0]<0) )
+                                                 mapManager.ForwardPoints[0]<0)
         {
                 max = mapManager.RightPoints[0];
                 dir = 'R';
@@ -262,7 +267,7 @@ char MainWindow::ChooseDirection()
             max = mapManager.ForwardPoints[0];
             dir = 'F';
         }
-        if(mapManager.LeftPoints[0]>(max+6) && mapManager.RightPoints[0]<74 ||
+        if((mapManager.LeftPoints[0]>(max+1) && mapManager.RightPoints[0]<74) ||
                 mapManager.LeftPoints[1]==500 || mapManager.LeftPoints[2]==500 )
         {
             max = mapManager.LeftPoints[0];
@@ -279,17 +284,58 @@ char MainWindow::ChooseDirection()
 
 void MainWindow::CheckPriority()
 {
-    for(int i=0; i<28; i++)
+    if(goalPos[0]<0)
     {
-        if(i%7<3)
+        for(int i=0; i<28; i++)
         {
             if(mapManager.getNearestMapElement(i)>100)
             {
-                setPriorityLeft();
+                goalPos = mapManager.getGlobalMapPos(robotManager.getPosX(), robotManager.getPosY(), i, robotManager.getOrientation());
             }
         }
     }
+    else //know where end tile is
+    {
+        switch(robotManager.getOrientation())
+        {
+        case Up:
+        {
+            if(robotManager.getPosX()>goalPos[0])
+                setPriorityLeft();
+            else
+                resetPriorityLeft();
+            break;
 
+        }
+        case Down:
+        {
+            if(robotManager.getPosX()>goalPos[0])
+                resetPriorityLeft();
+            else
+                setPriorityLeft();
+            break;
+
+        }
+        case Left:
+        {
+            if(robotManager.getPosY()>goalPos[1])
+                resetPriorityLeft();
+            else
+                setPriorityLeft();
+            break;
+
+        }
+        case Right:
+        {
+            if(robotManager.getPosY()>goalPos[1])
+                setPriorityLeft();
+            else
+                resetPriorityLeft();
+            break;
+
+        }
+        };
+    }
 }
 
 
@@ -346,11 +392,13 @@ bool MainWindow::LookForFinishLine()
 void MainWindow::setPriorityLeft()
 {
     priorityLeft = true;
+    ui->priorityEdit->setText("Left");
 }
 
 void MainWindow::resetPriorityLeft()
 {
     priorityLeft = false;
+    ui->priorityEdit->setText("Right");
 }
 
 void MainWindow::Rush()
