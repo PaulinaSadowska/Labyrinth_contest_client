@@ -16,7 +16,7 @@ void MapManager::mapInit()
     {
         globalMap[i].assign(99, 0); //empty tile
     }
-    globalMap[49][49]=20;
+    globalMap[49][49]=20; //start tile
 
     for(int i=0; i<28; i++)
     {
@@ -29,9 +29,13 @@ void MapManager::UpdateMap(RobotManager &manager, QString &localMap)
      UpdateGlobalMap(manager, localMap);
      UpdateNearestMap(manager);
 
-     FindDeadEnds(manager, 2);
+     int maxloop = 4;
 
-     int maxloop = 15;
+     while(FindDeadEnds(manager) && maxloop>0)
+         maxloop--;
+
+     ///loop untill there was some wide corridor found (maxloop is used just in case)
+     maxloop = 20;
      while(FindWideCorridor(manager) && maxloop)
          maxloop--;
 
@@ -63,26 +67,26 @@ void MapManager::UpdateGlobalMap(RobotManager &manager, QString &localMap)
             }
         }
     }
-    if(localMap[2]>'0' && localMap[2]<'4') //last move was NOT a rotation and robot wasn't hit the wall
+    if(localMap[2]>'0' && localMap[2]<'4') //last move was NOT a rotation and robot didn't hit the wall
     {
         //find tiles robot jump over
         mapPos = getSteppedPos(manager.getPosX(), manager.getPosY(), manager.getOrientation());
 
         //increment element value when stepped
-        if(globalMap[mapPos[0]][mapPos[1]]>3)
+        if(globalMap[mapPos[0]][mapPos[1]]>3) //min value of passage is 3 (possible values: 50, 20, 8, 3)
             globalMap[mapPos[0]][mapPos[1]] *= 0.4;
         int stepSize = 1;
-        if(localMap[2]>'1') //fast forward
+        if(localMap[2]>='2') //last move: fast forward
         {
             //increment element value when jumped over
-            if(globalMap[mapPos[2]][mapPos[3]]>3)
+            if(globalMap[mapPos[2]][mapPos[3]]>3) //min value of passage is 3
                 globalMap[mapPos[2]][mapPos[3]] *= 0.4;
             stepSize = 2;
-            if(localMap[2]>'2') //rush
+            if(localMap[2]=='3') //last move: rush
             {
                 stepSize=3;
                 //increment element value when jumped over
-                if(globalMap[mapPos[4]][mapPos[5]]>3)
+                if(globalMap[mapPos[4]][mapPos[5]]>3) //min value of passage is 3
                     globalMap[mapPos[4]][mapPos[5]] *= 0.4;
             }
         }
@@ -149,25 +153,31 @@ void MapManager::UpdateDirectionWeights()
 /// but in many cases is very very helpful
 bool MapManager::FindWideCorridor(RobotManager &manager)
 {
-    bool flag = false;
+    bool success = false;
     std::vector<int> mapPos;
     mapPos.assign(2, 0);
+
+    //current robot position
     int posX = manager.getPosX();
     int posY = manager.getPosY();
+
+    //scan sqauare 11x11 next to the robot
     for(int x = -5; x<5; x++)
     {
         for(int y = -5; y<5; y++)
         {
+            //position within a global map && nor a robot current position
             if(posX+x < 99 && posX+x > 0 && posY+y < 99 && posY+y > 0 && (x!=0 || y!=0))
             {
                 mapPos[0] = posX+x;
                 mapPos[1] = posY+y;
+                //chacked tile is a passage (not finish tile!)
                 if(globalMap[mapPos[0]][mapPos[1]]>0 && globalMap[mapPos[0]][mapPos[1]]<51)
                 {
                     int sum[2][2] = {{0, 0}, {0, 0}};
                     int sum2 = 0;
 
-                    //cut too wide corners
+                    //find too wide corners
                     sum[0][0] = globalMap[mapPos[0]+1][mapPos[1]] + globalMap[mapPos[0]][mapPos[1]-1]
                             + globalMap[mapPos[0]+1][mapPos[1]-1];
                     sum[0][1] = globalMap[mapPos[0]-1][mapPos[1]] + globalMap[mapPos[0]][mapPos[1]+1]
@@ -188,37 +198,32 @@ bool MapManager::FindWideCorridor(RobotManager &manager)
                             (((sum[0][1]>89 || sum[0][1]==60) && sum[0][1]%2==0) && ((sum[0][0]<-1 && globalMap[mapPos[0]+1][mapPos[1]-1]==0) || sum[0][0]<-2)) ||
                             sum2==259 || sum2==229)
                     {
-                        globalMap[mapPos[0]][mapPos[1]] = -1;
-                        flag = true;
+                        globalMap[mapPos[0]][mapPos[1]] = -1; //place wall on the map to make passages only 1 tile wide
+                        success = true;
                     }
                 }
             }
         }
     }
-    return flag;
+    return success;
 }
 
-bool MapManager::FindDeadEnds(RobotManager &manager, int iterations)
+bool MapManager::FindDeadEnds(RobotManager &manager)
 {
-    //current position of the robot
-    int posX;
-    int posY;
-
     bool success = false;
 
-    posX = manager.getPosX();
-    posY = manager.getPosY();
+    //current position of the robot
+    int posX = manager.getPosX();
+    int posY = manager.getPosY();
 
     if(posX>4 && posX<95 && posY>4 && posY<95)
     {
-        for(int k=0; k<iterations; k++)
-        {
+            //scan sqauare 9x9 next to the robot
             for(int i=posX-4; i<posX+4; i++)
             {
                 for(int j=posY-4; j<posY+4; j++)
                 {
-
-                    if(posX!=i || posY!=j)
+                    if(posX!=i || posY!=j) //not a current robot position
                     {
                         if(globalMap[i][j]==50 || globalMap[i][j]==20 ||
                                 globalMap[i][j]==8 || globalMap[i][j]==3 || globalMap[i][j]==1)
@@ -231,7 +236,7 @@ bool MapManager::FindDeadEnds(RobotManager &manager, int iterations)
                             iloczyn = globalMap[i+1][j] * globalMap[i-1][j]
                                 * globalMap[i][j-1] * globalMap[i][j+1];
 
-                        if((sum==47 || sum == 17 || sum == 5 || sum == 0) && iloczyn>(-51) && iloczyn<0)
+                        if((sum==47 || sum == 17 || sum == 5 || sum == 0) && iloczyn>(-51) && iloczyn<0) //only dead end pass
                         {
                             globalMap[i][j] = -1;
                             success = true;
@@ -241,7 +246,6 @@ bool MapManager::FindDeadEnds(RobotManager &manager, int iterations)
                 }
             }
         }
-    }
     return success;
 }
 
@@ -348,7 +352,7 @@ QString MapManager::getMapElementStr(int element)
     if(element == 500)
         return "E";
 
-    return 0;
+    return "?";
 
 }
 

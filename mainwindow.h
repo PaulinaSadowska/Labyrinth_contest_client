@@ -35,6 +35,15 @@ private slots:
 
     void on_pushButtonRotateRight_clicked();
 
+    ///new map was loaded, inits managers, priority, goalPos and onePlaceCounter value
+    void NewMap();
+
+    ///shows information in UI
+    void UpdateUI();
+
+    ///updates data stores and processed by robotmanager and mapmanager
+    void UpdateManagers();
+
     ///move sequence
     bool Move();
 
@@ -62,12 +71,13 @@ private slots:
     ///sets priorityLeft true
     void setPriorityLeft();
 
-    ///sets priorityLeft False
+    ///sets priorityLeft False (highest priority has right direction)
     void resetPriorityLeft();
 
 private:
     Ui::MainWindow *ui;
     QTcpSocket* socket;
+    QString localMap;
     QTextStream socketStream;
     RobotManager robotManager; ///< object used to manage robot position on the map
     MapManager mapManager;     ///< object used to manage maps

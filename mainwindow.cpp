@@ -37,9 +37,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
     QTableWidgetItem *item = ui->globalMapTable->item(60, 45);
     ui->globalMapTable->scrollToItem(item);
-    ui->globalMapTable->scrollToItem(item); //didn't scroll in both axis when not called two times -.
+    ui->globalMapTable->scrollToItem(item); //didn't scroll in both axis when not called two times -.-
 
-    onePlaceCounter = 0;
+    onePlaceCounter = 0; //counts how long robot stays on the same tile
 
     goalPos.assign(2, 0); //goal tile unknown
 }
@@ -48,6 +48,18 @@ MainWindow::~MainWindow()
 {
     socket->close();
     delete ui;
+}
+
+
+void MainWindow::NewMap()
+{
+    robotManager.Init();
+    mapManager.mapInit();
+    resetPriorityLeft();
+    onePlaceCounter = 0;
+    //position of a goal tile not known
+    goalPos[0]=-1;
+    goalPos[1]=-1;
 }
 
 void MainWindow::on_pushButton_clicked()
@@ -99,52 +111,54 @@ void MainWindow::on_pushButtonRotateRight_clicked()
     RotateRight();
 }
 
+void MainWindow::UpdateUI()
+{
+    //show information about previous move
+    ui->rotationEdit->setText(localMap.mid(0,1));
+    ui->translationEdit->setText(localMap.mid(2,1));
+
+    //show robot vision table
+    for(int i=0;i<4;i++)
+        for(int j=0;j<7;j++)
+            ui->robotVisionTable->item(3-i,j)->setText(localMap.mid(4+i*7+j,1));
+
+    //show gobal map on ui
+    for(int i=0;i<98;i++)
+        for(int j=0;j<98;j++)
+            ui->globalMapTable->item(i,j)->setText(mapManager.getGlobalMapElementStr(j, i));
+
+    //show nearest map on ui
+    for(int i=0;i<4;i++)
+        for(int j=0;j<7;j++)
+            ui->nearestMapTable->item(3-i, j)->setText(mapManager.getNearestMapElementStr(j+7*i));
+
+}
+
+void MainWindow::UpdateManagers()
+{
+    //update robot manager based on informations about previous move
+    robotManager.MoveForward(localMap[2].digitValue());
+    if(localMap[0]=='R')
+        robotManager.RotateRight();
+    else if(localMap[0]=='L')
+        robotManager.RotateLeft();
+
+    //update maps (global and nearest)
+    mapManager.UpdateMap(robotManager, localMap);
+}
+
 void MainWindow::new_message()
 {
 
     if(socket->isReadable())
     {
-        QString localMap;
-        localMap=socketStream.readLine();
-        ui->rotationEdit->setText(localMap.mid(0,1));
-        ui->translationEdit->setText(localMap.mid(2,1));
-        for(int i=0;i<4;i++)
-            for(int j=0;j<7;j++)
-                ui->robotVisionTable->item(3-i,j)->setText(localMap.mid(4+i*7+j,1));
+        localMap=socketStream.readLine();      
 
+        if(localMap[0]=='X') //new map
+            NewMap();
 
-        //update robot manager
-        robotManager.MoveForward(localMap[2].digitValue());
-        if(localMap[0]=='R')
-            robotManager.RotateRight();
-        else if(localMap[0]=='L')
-            robotManager.RotateLeft();
-
-
-        else if(localMap[0]=='X') //new map
-        {
-            robotManager.Init();
-            mapManager.mapInit();
-            resetPriorityLeft();
-            //position of a goal tile not known
-            goalPos[0]=-1;
-            goalPos[1]=-1;
-        }
-
-        //update maps (global and nearest)
-        mapManager.UpdateMap(robotManager, localMap);
-
-        //show gobal map on ui
-        for(int i=0;i<98;i++)
-            for(int j=0;j<98;j++)
-                ui->globalMapTable->item(i,j)->setText(mapManager.getGlobalMapElementStr(j, i));
-
-        //show nearest map on ui
-        for(int i=0;i<4;i++)
-            for(int j=0;j<7;j++)
-            {
-                ui->nearestMapTable->item(3-i, j)->setText(mapManager.getNearestMapElementStr(j+7*i));
-            }
+        UpdateManagers();
+        UpdateUI();
 
         onePlaceCounter++;
         if(!Move())
@@ -234,9 +248,9 @@ char MainWindow::ChooseDirection()
 
     if(priorityLeft)
     {
-        if(mapManager.LeftPoints[0]>(max-1) && (mapManager.LeftPoints[0]<74 ||
-            mapManager.LeftPoints[1]==500 || mapManager.LeftPoints[2]==500 ||
-                                            mapManager.ForwardPoints[0]<0) )
+        if((mapManager.LeftPoints[0]>(max-1) && mapManager.LeftPoints[0]<74) ||
+            mapManager.LeftPoints[1]>=500 || mapManager.LeftPoints[2]>=500 ||
+                                            mapManager.ForwardPoints[0]<0 )
         {
                 max = mapManager.LeftPoints[0];
                 dir = 'L';
@@ -256,7 +270,7 @@ char MainWindow::ChooseDirection()
     else
     {
         if((mapManager.RightPoints[0]>(max-1) && mapManager.RightPoints[0]<74) ||
-           mapManager.RightPoints[1]==500 || mapManager.RightPoints[2]==500 ||
+           mapManager.RightPoints[1]>=500 || mapManager.RightPoints[2]>=500 ||
                                                  mapManager.ForwardPoints[0]<0)
         {
                 max = mapManager.RightPoints[0];
@@ -274,6 +288,7 @@ char MainWindow::ChooseDirection()
             dir = 'L';
         }
     }
+    //not sure if leave it. It helps but only in certain situation which occurs very rarely
     if(mapManager.ForwardPoints[0]==mapManager.RightPoints[0] && mapManager.ForwardPoints[0]%2==0)
     {
         max = mapManager.ForwardPoints[0];
@@ -284,6 +299,7 @@ char MainWindow::ChooseDirection()
 
 void MainWindow::CheckPriority()
 {
+    //look for finish tile and save it's position in goalPos
     if(goalPos[0]<0)
     {
         for(int i=0; i<28; i++)
@@ -294,8 +310,9 @@ void MainWindow::CheckPriority()
             }
         }
     }
-    else //know where end tile is
+    else //if robot knows where end tile is
     {
+        //set priority based on robot orientation and position and ent tile position
         switch(robotManager.getOrientation())
         {
         case Up:
@@ -367,7 +384,9 @@ bool MainWindow::LookForFinishLine()
     //if finish line is in the right of robot
     if(     mapManager.getNearestMapElement(4)>100 ||
             mapManager.getNearestMapElement(5)>100 ||
-            mapManager.getNearestMapElement(6)>100)
+            mapManager.getNearestMapElement(6)>100 ||
+            mapManager.getNearestMapElement(12)>100 ||
+            mapManager.getNearestMapElement(13)>100)
     {
         if(mapManager.RightPoints[0]>0)
         {
@@ -379,7 +398,9 @@ bool MainWindow::LookForFinishLine()
     //if finish line is in the left of robot
     if(mapManager.getNearestMapElement(0)>100 ||
             mapManager.getNearestMapElement(1)>100 ||
-            mapManager.getNearestMapElement(2)>100 )
+            mapManager.getNearestMapElement(2)>100 ||
+            mapManager.getNearestMapElement(7)>100 ||
+            mapManager.getNearestMapElement(8)>100)
     {
         if(mapManager.LeftPoints[0]>0)
         {
@@ -389,6 +410,8 @@ bool MainWindow::LookForFinishLine()
     }
     return false;
 }
+
+
 void MainWindow::setPriorityLeft()
 {
     priorityLeft = true;

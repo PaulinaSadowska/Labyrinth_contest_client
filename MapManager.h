@@ -64,7 +64,7 @@ public:
     QString getNearestMapElementStr(int i);
 
     /// finds and eliminates dead ends on local and global map (checks only nearest tiles)
-    bool FindDeadEnds(RobotManager &manager, int iterations);
+    bool FindDeadEnds(RobotManager &manager);
 
     /// finds and eliminates SOME (not all :() wide corridors on local and global map (checks only nearest tiles)
     bool FindWideCorridor(RobotManager &manager);
