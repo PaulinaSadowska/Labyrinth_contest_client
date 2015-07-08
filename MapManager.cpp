@@ -12,11 +12,11 @@ MapManager::~MapManager()
 
 void MapManager::mapInit()
 {
-    for(int i=0; i<99; i++)
+    for(int i=0; i<105; i++)
     {
-        globalMap[i].assign(99, 0); //empty tile
+        globalMap[i].assign(104, 0); //empty tile
     }
-    globalMap[49][49]=20; //start tile
+    globalMap[52][52]=20; //start tile
 
     for(int i=0; i<28; i++)
     {
@@ -154,8 +154,8 @@ void MapManager::UpdateDirectionWeights()
 bool MapManager::FindWideCorridor(RobotManager &manager)
 {
     bool success = false;
-    std::vector<int> mapPos;
-    mapPos.assign(2, 0);
+    std::vector<int> tilePos;
+    tilePos.assign(2, 0);
 
     //current robot position
     int posX = manager.getPosX();
@@ -166,39 +166,28 @@ bool MapManager::FindWideCorridor(RobotManager &manager)
     {
         for(int y = -5; y<5; y++)
         {
+            tilePos[0] = posX+x;
+            tilePos[1] = posY+y;
             //position within a global map && nor a robot current position
-            if(posX+x < 99 && posX+x > 0 && posY+y < 99 && posY+y > 0 && (x!=0 || y!=0))
+            if(tilePos[0] < 102 && tilePos[0] > 2 && tilePos[1] < 102 && tilePos[1] > 2 && (x!=0 || y!=0))
             {
-                mapPos[0] = posX+x;
-                mapPos[1] = posY+y;
                 //chacked tile is a passage (not finish tile!)
-                if(globalMap[mapPos[0]][mapPos[1]]>0 && globalMap[mapPos[0]][mapPos[1]]<51)
+                if(globalMap[tilePos[0]][tilePos[1]]>0 && globalMap[tilePos[0]][tilePos[1]]<51)
                 {
-                    int sum[2][2] = {{0, 0}, {0, 0}};
+                    int sum[2] = {0, 0};
                     int sum2 = 0;
 
-                    //find too wide corners
-                    sum[0][0] = globalMap[mapPos[0]+1][mapPos[1]] + globalMap[mapPos[0]][mapPos[1]-1]
-                            + globalMap[mapPos[0]+1][mapPos[1]-1];
-                    sum[0][1] = globalMap[mapPos[0]-1][mapPos[1]] + globalMap[mapPos[0]][mapPos[1]+1]
-                            + globalMap[mapPos[0]-1][mapPos[1]+1];
-
-                    sum[1][0] = globalMap[mapPos[0]+1][mapPos[1]] + globalMap[mapPos[0]][mapPos[1]+1]
-                            + globalMap[mapPos[0]+1][mapPos[1]+1];
-                    sum[1][1] = globalMap[mapPos[0]-1][mapPos[1]] + globalMap[mapPos[0]][mapPos[1]-1]
-                            + globalMap[mapPos[0]-1][mapPos[1]-1];
-
                     //find when tile is surrounded by free space and only 1 wall
-                    sum2 = sum[0][1] + sum[0][0] + globalMap[mapPos[0]-1][mapPos[1]-1] + globalMap[mapPos[0]+1][mapPos[1]+1];
+                    sum[0] = globalMap[tilePos[0]+1][tilePos[1]] + globalMap[tilePos[0]][tilePos[1]-1]
+                            + globalMap[tilePos[0]+1][tilePos[1]-1];
+                    sum[1] = globalMap[tilePos[0]-1][tilePos[1]] + globalMap[tilePos[0]][tilePos[1]+1]
+                            + globalMap[tilePos[0]-1][tilePos[1]-1];
+                    sum2 = sum[0] + sum[1] +  globalMap[tilePos[0]-1][tilePos[1]+1] + globalMap[tilePos[0]+1][tilePos[1]+1];
 
 
-                    if((((sum[1][0]>89 || sum[1][0]==60) && sum[1][0]%2==0)  && ((sum[1][1]<-1 && globalMap[mapPos[0]-1][mapPos[1]-1]==0) || sum[1][1]<-2)) ||
-                            (((sum[1][1]>89 || sum[1][1]==60) && sum[1][1]%2==0) && ((sum[1][0]<-1 && globalMap[mapPos[0]+1][mapPos[1]+1]==0) || sum[1][0]<-2)) ||
-                            (((sum[0][0]>89 || sum[0][0]==60) && sum[0][0]%2==0) && ((sum[0][1]<-1 && globalMap[mapPos[0]-1][mapPos[1]+1]==0) || sum[0][1]<-2)) ||
-                            (((sum[0][1]>89 || sum[0][1]==60) && sum[0][1]%2==0) && ((sum[0][0]<-1 && globalMap[mapPos[0]+1][mapPos[1]-1]==0) || sum[0][0]<-2)) ||
-                            sum2==259 || sum2==229)
+                    if( WideCorridorCheck(tilePos[0], tilePos[1]) || sum2==259 || sum2==229)
                     {
-                        globalMap[mapPos[0]][mapPos[1]] = -1; //place wall on the map to make passages only 1 tile wide
+                        globalMap[tilePos[0]][tilePos[1]] = -1; //place wall on the map to make passages only 1 tile wide
                         success = true;
                     }
                 }
@@ -206,6 +195,28 @@ bool MapManager::FindWideCorridor(RobotManager &manager)
         }
     }
     return success;
+}
+
+bool MapManager::WideCorridorCheck(int posX, int posY) //find wide corridor
+{
+    if(globalMap[posX][posY-1]>2 && globalMap[posX+1][posY-1]>2 && globalMap[posX+1][posY]>2)
+        if(globalMap[posX-1][posY]<0 && globalMap[posX][posY+1]<0)
+            return true;
+
+    if(globalMap[posX-1][posY]>2 && globalMap[posX-1][posY+1]>2 && globalMap[posX][posY+1]>2)
+        if(globalMap[posX+1][posY]<0 && globalMap[posX][posY-1]<0)
+            return true;
+
+    if(globalMap[posX+1][posY]>2 && globalMap[posX+1][posY+1]>2 && globalMap[posX][posY+1]>2)
+        if(globalMap[posX-1][posY]<0 && globalMap[posX][posY-1]<0)
+            return true;
+
+    if(globalMap[posX-1][posY-1]>2 && globalMap[posX][posY-1]>2 && globalMap[posX-1][posY]>2)
+        if(globalMap[posX+1][posY]<0 && globalMap[posX][posY+1]<0)
+            return true;
+
+
+    return false;
 }
 
 bool MapManager::FindDeadEnds(RobotManager &manager)
@@ -216,7 +227,7 @@ bool MapManager::FindDeadEnds(RobotManager &manager)
     int posX = manager.getPosX();
     int posY = manager.getPosY();
 
-    if(posX>4 && posX<95 && posY>4 && posY<95)
+    if(posX>3 && posX<101 && posY>3 && posY<101)
     {
             //scan sqauare 9x9 next to the robot
             for(int i=posX-4; i<posX+4; i++)
@@ -297,7 +308,7 @@ std::vector<int> MapManager::getGlobalMapPos(int robotPosX, int robotPosY, int i
 
 int MapManager::getGlobalMapElement(int x, int y)
 {
-    if(x<100 && x>-1 && y<100 && y>-1)
+    if(x<105 && x>-1 && y<105 && y>-1)
         return globalMap[x][y];
 
     return 0;

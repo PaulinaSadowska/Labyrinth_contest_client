@@ -138,6 +138,8 @@ void MainWindow::UpdateManagers()
 {
     //update robot manager based on informations about previous move
     robotManager.MoveForward(localMap[2].digitValue());
+    if(localMap[2]>'0') //robot moved from previous tile
+        onePlaceCounter=0;
     if(localMap[0]=='R')
         robotManager.RotateRight();
     else if(localMap[0]=='L')
@@ -288,7 +290,7 @@ char MainWindow::ChooseDirection()
             dir = 'L';
         }
     }
-    //not sure if leave it. It helps but only in certain situation which occurs very rarely
+    //It helps but only in certain situation which occurs very rarely
     if(mapManager.ForwardPoints[0]==mapManager.RightPoints[0] && mapManager.ForwardPoints[0]%2==0)
     {
         max = mapManager.ForwardPoints[0];
@@ -319,7 +321,7 @@ void MainWindow::CheckPriority()
         {
             if(robotManager.getPosX()>goalPos[0])
                 setPriorityLeft();
-            else
+            else if(robotManager.getPosX()<goalPos[0])
                 resetPriorityLeft();
             break;
 
@@ -328,7 +330,7 @@ void MainWindow::CheckPriority()
         {
             if(robotManager.getPosX()>goalPos[0])
                 resetPriorityLeft();
-            else
+            else if(robotManager.getPosX()<goalPos[0])
                 setPriorityLeft();
             break;
 
@@ -337,7 +339,7 @@ void MainWindow::CheckPriority()
         {
             if(robotManager.getPosY()>goalPos[1])
                 resetPriorityLeft();
-            else
+            else if (robotManager.getPosY()<goalPos[1])
                 setPriorityLeft();
             break;
 
@@ -346,7 +348,7 @@ void MainWindow::CheckPriority()
         {
             if(robotManager.getPosY()>goalPos[1])
                 setPriorityLeft();
-            else
+            else if (robotManager.getPosY()<goalPos[1])
                 resetPriorityLeft();
             break;
 
@@ -426,7 +428,6 @@ void MainWindow::resetPriorityLeft()
 
 void MainWindow::Rush()
 {
-    onePlaceCounter=0;
     if(socket->isWritable())
         socketStream<<"Rush"<<endl;
 
@@ -434,14 +435,12 @@ void MainWindow::Rush()
 
 void MainWindow::MoveFastForward()
 {
-    onePlaceCounter=0;
     if(socket->isWritable())
         socketStream<<"FastForward"<<endl;
 }
 
 void MainWindow::MoveForward()
 {
-    onePlaceCounter=0;
     if(socket->isWritable())
         socketStream<<"Forward"<<endl;
 }

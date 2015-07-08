@@ -69,6 +69,8 @@ public:
     /// finds and eliminates SOME (not all :() wide corridors on local and global map (checks only nearest tiles)
     bool FindWideCorridor(RobotManager &manager);
 
+    bool WideCorridorCheck(int posX, int posY);
+
     ///inits all maps
     void mapInit();
 
@@ -79,7 +81,7 @@ public:
    //bool deadEndFlag;
 
 private:
-   std::vector<int> globalMap[99]; ///< map of all known tiles
+   std::vector<int> globalMap[105]; ///< map of all known tiles
    int nearestMap[28];             ///< map of nearest 4x7 tiles, used to make decisions, consist of tiles from global map, store more information than local map!
 
 };

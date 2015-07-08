@@ -12,8 +12,8 @@ RobotManager::~RobotManager()
 
 void RobotManager::Init()
 {
-    position.posX = 49;
-    position.posY = 49;
+    position.posX = 52;
+    position.posY = 52;
     position.orientation = Right;
 }
 
